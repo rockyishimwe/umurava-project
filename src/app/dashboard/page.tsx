@@ -3,15 +3,23 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Briefcase, Sparkles, Users, TrendingUp, TrendingDown, Minus, MoreHorizontal } from "lucide-react";
+import { ApplicationSourcesChart } from "@/components/dashboard/ApplicationSourcesChart";
+import { CandidateInflowChart } from "@/components/dashboard/CandidateInflowChart";
+import { ScreeningTargetsCard } from "@/components/dashboard/ScreeningTargetsCard";
+import { StatSparkline } from "@/components/dashboard/StatSparkline";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ROUTES } from "@/lib/constants";
-import { formatShortDate, formatNumber } from "@/lib/utils";
+import { cn, formatShortDate, formatNumber } from "@/lib/utils";
 import { mockDashboardStats, mockJobs } from "@/lib/mockData";
 import type { Trend } from "@/types";
+
+function sparkFromSeed(seed: number) {
+  return Array.from({ length: 8 }, (_, i) => ({ i, v: seed + i * 2 + ((i + seed) % 3) * 3 }));
+}
 
 function TrendLine({ trend }: { trend: Trend }) {
   const Icon =
@@ -24,9 +32,9 @@ function TrendLine({ trend }: { trend: Trend }) {
         : "text-text-muted";
 
   return (
-    <div className="mt-2 flex items-center gap-1 text-xs text-text-muted">
-      <Icon className={color + " h-3 w-3"} />
-      <span className="font-semibold">{trend.value}</span>
+    <div className="mt-1 flex items-center gap-1 text-xs text-text-muted">
+      <Icon className={cn("h-3 w-3 shrink-0", color)} />
+      <span className="font-semibold text-text-primary">{trend.value}</span>
       <span>{trend.label}</span>
     </div>
   );
@@ -39,6 +47,7 @@ function StatCard({
   trend,
   meta,
   loading,
+  spark,
 }: {
   title: string;
   value: string;
@@ -46,24 +55,26 @@ function StatCard({
   trend: Trend;
   meta?: string;
   loading: boolean;
+  spark: Array<{ i: number; v: number }>;
 }) {
   return (
     <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 260, damping: 22 }}>
-      <Card className="p-5">
+      <div className="rounded-card border border-border bg-card p-5 shadow-card">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="text-sm font-medium text-text-muted">{title}</div>
-            <div className="mt-2 text-3xl font-bold tracking-tight text-text-primary">
+            <div className="mt-1 text-3xl font-bold tracking-tight text-text-primary">
               {loading ? <Skeleton className="h-9 w-28" /> : value}
             </div>
             {loading ? <Skeleton className="mt-3 h-3 w-40" /> : <TrendLine trend={trend} />}
-            {meta ? <div className="mt-2 text-xs text-text-muted">{meta}</div> : null}
+            {meta ? <div className="mt-1 text-xs text-text-muted">{meta}</div> : null}
           </div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-input bg-accent/10 text-accent">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent ring-4 ring-accent/5">
             <Icon className="h-5 w-5" />
           </div>
         </div>
-      </Card>
+        {loading ? <Skeleton className="mt-4 h-12 w-full rounded-input" /> : <StatSparkline data={spark} />}
+      </div>
     </motion.div>
   );
 }
@@ -76,18 +87,13 @@ function statusBadgeVariant(status: string) {
 }
 
 export default function DashboardPage() {
-  const loading = false; // wired for future async
+  const loading = false;
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
       <PageHeader
         title="Dashboard"
-        subtitle="Track jobs, applicants, and screening performance at a glance."
-        right={
-          <Link href={ROUTES.newJob}>
-            <Button>Create New Job</Button>
-          </Link>
-        }
+        subtitle="Welcome back — here’s what’s happening with recruitment and AI screening."
       />
 
       <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -96,6 +102,7 @@ export default function DashboardPage() {
           value={formatNumber(mockDashboardStats.activeJobs.value)}
           icon={Briefcase}
           trend={mockDashboardStats.activeJobs.trend}
+          spark={sparkFromSeed(4)}
           loading={loading}
         />
         <StatCard
@@ -103,6 +110,7 @@ export default function DashboardPage() {
           value={formatNumber(mockDashboardStats.totalApplicants.value)}
           icon={Users}
           trend={mockDashboardStats.totalApplicants.trend}
+          spark={sparkFromSeed(18)}
           loading={loading}
         />
         <StatCard
@@ -111,6 +119,7 @@ export default function DashboardPage() {
           icon={Sparkles}
           trend={mockDashboardStats.shortlisted.trend}
           meta={`Conversion: ${mockDashboardStats.shortlisted.conversionRatePct}%`}
+          spark={sparkFromSeed(6)}
           loading={loading}
         />
         <StatCard
@@ -119,8 +128,19 @@ export default function DashboardPage() {
           icon={Sparkles}
           trend={mockDashboardStats.inScreening.trend}
           meta={`Avg time: ${mockDashboardStats.inScreening.avgTimePerCandidateMins}m / candidate`}
+          spark={sparkFromSeed(10)}
           loading={loading}
         />
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <div className="xl:col-span-2">
+          <CandidateInflowChart />
+        </div>
+        <div className="flex flex-col gap-4">
+          <ApplicationSourcesChart />
+          <ScreeningTargetsCard />
+        </div>
       </div>
 
       <div className="mt-6">
@@ -129,7 +149,7 @@ export default function DashboardPage() {
           <CardBody className="px-0 pb-0">
             {mockJobs.length === 0 ? (
               <div className="p-8 text-center">
-                <div className="mx-auto mb-2 h-12 w-12 rounded-full bg-accent/10 text-accent flex items-center justify-center">
+                <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 text-accent">
                   <Briefcase className="h-6 w-6" />
                 </div>
                 <div className="text-sm font-semibold">No jobs yet</div>
@@ -160,7 +180,7 @@ export default function DashboardPage() {
                     {mockJobs.map((job) => (
                       <tr
                         key={job.id}
-                        className="border-t border-border hover:bg-bg/70 transition-colors"
+                        className="border-t border-border transition-colors hover:bg-bg/70"
                       >
                         <td className="px-5 py-4 font-semibold text-text-primary">{job.title}</td>
                         <td className="px-5 py-4 text-text-muted">{job.department}</td>
@@ -173,7 +193,7 @@ export default function DashboardPage() {
                         <td className="px-5 py-4">
                           <div className="flex items-center justify-end gap-3">
                             <Link
-                              className="text-accent hover:text-accent-hover font-semibold"
+                              className="font-semibold text-accent hover:text-accent-hover"
                               href={`/jobs/${job.id}`}
                             >
                               View →
@@ -199,8 +219,8 @@ export default function DashboardPage() {
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 260, damping: 22 }}>
           <Link href={ROUTES.newJob} className="block">
-            <Card className="border-accent/30 bg-accent text-white">
-              <div className="flex items-center justify-between p-6">
+            <div className="rounded-card border border-accent/25 bg-accent p-6 text-white shadow-card">
+              <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm font-semibold opacity-90">Quick Action</div>
                   <div className="mt-1 text-xl font-bold">Create New Job</div>
@@ -208,41 +228,40 @@ export default function DashboardPage() {
                 </div>
                 <div className="rounded-full bg-white/15 p-3">→</div>
               </div>
-            </Card>
+            </div>
           </Link>
         </motion.div>
 
         <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 260, damping: 22 }}>
-          <Card>
-            <div className="flex items-center justify-between p-6">
+          <div className="rounded-card border border-border bg-card p-6 shadow-card">
+            <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-semibold text-text-muted">AI Insights</div>
-                <div className="mt-1 text-lg font-bold">Spot trends & gaps</div>
+                <div className="mt-1 text-lg font-bold text-text-primary">Spot trends & gaps</div>
                 <div className="mt-2 text-sm text-text-muted">Identify top skills and common risks.</div>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-input bg-accent/10 text-accent">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-accent/10 text-accent ring-4 ring-accent/5">
                 <Sparkles className="h-5 w-5" />
               </div>
             </div>
-          </Card>
+          </div>
         </motion.div>
 
         <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 260, damping: 22 }}>
-          <Card>
-            <div className="flex items-center justify-between p-6">
+          <div className="rounded-card border border-border bg-card p-6 shadow-card">
+            <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-semibold text-text-muted">Talent Pool</div>
-                <div className="mt-1 text-lg font-bold">Build your pipeline</div>
+                <div className="mt-1 text-lg font-bold text-text-primary">Build your pipeline</div>
                 <div className="mt-2 text-sm text-text-muted">Save and revisit high-signal candidates.</div>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-input bg-accent/10 text-accent">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-accent/10 text-accent ring-4 ring-accent/5">
                 <Users className="h-5 w-5" />
               </div>
             </div>
-          </Card>
+          </div>
         </motion.div>
       </div>
     </motion.div>
   );
 }
-
