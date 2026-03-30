@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TalentScreen AI (Frontend)
 
-## Getting Started
+Production-ready frontend for **TalentScreen AI** — an AI-powered candidate screening tool for HR recruiters (Umurava AI Hackathon).
 
-First, run the development server:
+## Tech stack (strict)
+
+- **Next.js 14** (App Router)
+- **TypeScript**
+- **Tailwind CSS**
+- **Redux Toolkit**
+- **Axios**
+- **Framer Motion**
+- **Recharts**
+- **Lucide React**
+- **React Hot Toast**
+- **React Dropzone**
+
+## Design system tokens
+
+Tailwind tokens are defined in `tailwind.config.ts` and mapped to:
+
+- **primary**: `#0F172A`
+- **accent**: `#3B82F6` (hover: `#2563EB`)
+- **success/warning/danger**: `#10B981` / `#F59E0B` / `#EF4444`
+- **bg/card/border**: `#F8FAFC` / `#FFFFFF` / `#E2E8F0`
+- **text-primary/text-muted**: `#0F172A` / `#64748B`
+
+Typography uses **Inter** via `next/font`.
+
+## Local development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000` (root redirects to `/dashboard`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+All API calls go through `src/lib/api.ts` (Axios) and use:
 
-## Learn More
+- `NEXT_PUBLIC_API_URL`
+  - If omitted, the app runs in **mock mode** (`mock://local`) with realistic local dummy data.
 
-To learn more about Next.js, take a look at the following resources:
+## Routes implemented
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Dashboard**: `/dashboard`
+- **Create Job (4-step)**: `/jobs/new`
+- **Job detail**: `/jobs/[id]`
+- **Applicant ingestion**: `/screening/[id]`
+- **AI screening progress** (auto-redirect ~5s): `/screening/[id]/progress`
+- **Shortlist results**: `/screening/[id]/results`
+- **Candidate detail**: `/candidates/[id]`
+- **Settings**: `/settings`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Chatbot (demo)
 
-## Deploy on Vercel
+A floating **TalentScreen Copilot** widget is included globally (mock responses) at:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `src/components/chat/ChatBotWidget.tsx`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Notes
+
+- This repo is currently **frontend-only**; data is mocked in `src/lib/mockData.ts`.
+- Redux slices are in `src/store/slices/`.

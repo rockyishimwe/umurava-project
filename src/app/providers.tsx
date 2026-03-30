@@ -3,11 +3,13 @@
 import { Provider } from "react-redux";
 import { Toaster } from "react-hot-toast";
 import { store } from "@/store";
+import { ChatBotWidget } from "@/components/chat/ChatBotWidget";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
       {children}
+      <ChatBotWidget />
       <Toaster
         position="top-right"
         toastOptions={{
