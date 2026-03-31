@@ -11,15 +11,111 @@ import toast from "react-hot-toast";
 export default function ContactPage() {
   const { theme, toggleTheme } = useTheme();
   const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({ name: "", email: "", subject: "", message: "" });
+  const [errors, setErrors] = useState<Partial<Record<keyof typeof formData, string>>>({});
+  const [touched, setTouched] = useState<Partial<Record<keyof typeof formData, boolean>>>({});
+
+  const isValidEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateForm = () => {
+    const newErrors: typeof errors = {};
+    if (!formData.name.trim()) {
+      newErrors.name = "Full name is required";
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = "Name must be at least 2 characters";
+    }
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!isValidEmail(formData.email)) {
+      newErrors.email = "Please enter a valid email";
+    }
+    if (!formData.subject.trim()) {
+      newErrors.subject = "Subject is required";
+    } else if (formData.subject.trim().length < 3) {
+      newErrors.subject = "Subject must be at least 3 characters";
+    }
+    if (!formData.message.trim()) {
+      newErrors.message = "Message is required";
+    } else if (formData.message.trim().length < 10) {
+      newErrors.message = "Message must be at least 10 characters";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleBlur = (field: keyof typeof formData) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  };
+
+  const handleChange = (
+    field: keyof typeof formData,
+    value: string
+  ) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (touched[field]) {
+      validate(field, value);
+    }
+  };
+
+  const validate = (field: keyof typeof formData, value: string) => {
+    const newErrors = { ...errors };
+    switch (field) {
+      case "name":
+        if (!value.trim()) {
+          newErrors.name = "Full name is required";
+        } else if (value.trim().length < 2) {
+          newErrors.name = "Name must be at least 2 characters";
+        } else {
+          delete newErrors.name;
+        }
+        break;
+      case "email":
+        if (!value.trim()) {
+          newErrors.email = "Email is required";
+        } else if (!isValidEmail(value)) {
+          newErrors.email = "Please enter a valid email";
+        } else {
+          delete newErrors.email;
+        }
+        break;
+      case "subject":
+        if (!value.trim()) {
+          newErrors.subject = "Subject is required";
+        } else if (value.trim().length < 3) {
+          newErrors.subject = "Subject must be at least 3 characters";
+        } else {
+          delete newErrors.subject;
+        }
+        break;
+      case "message":
+        if (!value.trim()) {
+          newErrors.message = "Message is required";
+        } else if (value.trim().length < 10) {
+          newErrors.message = "Message must be at least 10 characters";
+        } else {
+          delete newErrors.message;
+        }
+        break;
+    }
+    setErrors(newErrors);
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!validateForm()) {
+      toast.error("Please fix the errors above.");
+      return;
+    }
     setLoading(true);
     try {
       // Simulate form submission
       await new Promise(resolve => setTimeout(resolve, 1000));
       toast.success("Message sent successfully! We'll get back to you soon.");
-      (e.target as HTMLFormElement).reset();
+      setFormData({ name: "", email: "", subject: "", message: "" });
+      setTouched({});
     } catch {
       toast.error("Failed to send message. Please try again.");
     } finally {
@@ -143,10 +239,19 @@ export default function ContactPage() {
                           type="text"
                           id="name"
                           name="name"
-                          required
-                          className="w-full rounded-input border border-border bg-bg px-4 py-3 text-text-primary placeholder-text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all"
+                          value={formData.name}
+                          onChange={(e) => handleChange("name", e.target.value)}
+                          onBlur={() => handleBlur("name")}
+                          className={`w-full rounded-input border bg-bg px-4 py-3 text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 transition-all ${
+                            errors.name && touched.name
+                              ? "border-danger focus:border-danger focus:ring-danger/20"
+                              : "border-border focus:border-accent focus:ring-accent/20"
+                          }`}
                           placeholder="John Doe"
                         />
+                        {errors.name && touched.name && (
+                          <p className="text-xs font-medium text-danger mt-1.5">{errors.name}</p>
+                        )}
                       </div>
                       <div>
                         <label htmlFor="email" className="block text-sm font-semibold text-text-primary mb-3">
@@ -156,10 +261,19 @@ export default function ContactPage() {
                           type="email"
                           id="email"
                           name="email"
-                          required
-                          className="w-full rounded-input border border-border bg-bg px-4 py-3 text-text-primary placeholder-text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all"
+                          value={formData.email}
+                          onChange={(e) => handleChange("email", e.target.value)}
+                          onBlur={() => handleBlur("email")}
+                          className={`w-full rounded-input border bg-bg px-4 py-3 text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 transition-all ${
+                            errors.email && touched.email
+                              ? "border-danger focus:border-danger focus:ring-danger/20"
+                              : "border-border focus:border-accent focus:ring-accent/20"
+                          }`}
                           placeholder="john@example.com"
                         />
+                        {errors.email && touched.email && (
+                          <p className="text-xs font-medium text-danger mt-1.5">{errors.email}</p>
+                        )}
                       </div>
                     </div>
 
@@ -171,10 +285,19 @@ export default function ContactPage() {
                         type="text"
                         id="subject"
                         name="subject"
-                        required
-                        className="w-full rounded-input border border-border bg-bg px-4 py-3 text-text-primary placeholder-text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all"
+                        value={formData.subject}
+                        onChange={(e) => handleChange("subject", e.target.value)}
+                        onBlur={() => handleBlur("subject")}
+                        className={`w-full rounded-input border bg-bg px-4 py-3 text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 transition-all ${
+                          errors.subject && touched.subject
+                            ? "border-danger focus:border-danger focus:ring-danger/20"
+                            : "border-border focus:border-accent focus:ring-accent/20"
+                        }`}
                         placeholder="How can we help?"
                       />
+                      {errors.subject && touched.subject && (
+                        <p className="text-xs font-medium text-danger mt-1.5">{errors.subject}</p>
+                      )}
                     </div>
 
                     <div>
@@ -184,14 +307,23 @@ export default function ContactPage() {
                       <textarea
                         id="message"
                         name="message"
-                        required
+                        value={formData.message}
+                        onChange={(e) => handleChange("message", e.target.value)}
+                        onBlur={() => handleBlur("message")}
                         rows={6}
-                        className="w-full rounded-input border border-border bg-bg px-4 py-3 text-text-primary placeholder-text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all resize-none"
+                        className={`w-full rounded-input border bg-bg px-4 py-3 text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 transition-all resize-none ${
+                          errors.message && touched.message
+                            ? "border-danger focus:border-danger focus:ring-danger/20"
+                            : "border-border focus:border-accent focus:ring-accent/20"
+                        }`}
                         placeholder="Tell us more about your inquiry..."
                       />
+                      {errors.message && touched.message && (
+                        <p className="text-xs font-medium text-danger mt-1.5">{errors.message}</p>
+                      )}
                     </div>
 
-                    <Button type="submit" disabled={loading} size="lg" className="w-full font-semibold">
+                    <Button type="submit" disabled={loading || Object.keys(errors).length > 0} size="lg" className="w-full font-semibold">
                       {loading ? (
                         <span className="flex items-center gap-2">
                           <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
