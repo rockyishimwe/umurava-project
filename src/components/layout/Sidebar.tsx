@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  Home,
   LayoutDashboard,
   Briefcase,
   Sparkles,
@@ -10,8 +11,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
-
-const overview = [{ label: "Dashboard", href: ROUTES.dashboard, icon: LayoutDashboard }] as const;
 
 const system = [{ label: "Settings", href: "/settings", icon: Settings }] as const;
 
@@ -87,9 +86,8 @@ export function Sidebar({ pathname }: { pathname: string }) {
 
       <nav className="flex-1 overflow-y-auto pb-4">
         <NavSection title="Overview">
-          {overview.map((it) => (
-            <NavLink key={it.href} {...it} pathname={pathname} />
-          ))}
+          <NavLink href={ROUTES.home} label="Home" icon={Home} pathname={pathname} />
+          <NavLink href={ROUTES.dashboard} label="Dashboard" icon={LayoutDashboard} pathname={pathname} />
         </NavSection>
         <NavSection title="Pipeline">
           <NavLink href="/jobs/new" label="Jobs" icon={Briefcase} pathname={pathname} prefixMatch="/jobs" />
@@ -125,13 +123,13 @@ export function Sidebar({ pathname }: { pathname: string }) {
             <div className="truncate text-sm font-semibold text-white">A. Recruiter</div>
             <div className="truncate text-xs text-white/50">HR Recruiter</div>
           </div>
-          <button
-            type="button"
+          <Link
+            href={ROUTES.login}
             className="shrink-0 rounded-input p-2 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
             aria-label="Sign out"
           >
             <LogOut className="h-4 w-4" />
-          </button>
+          </Link>
         </div>
       </div>
     </aside>

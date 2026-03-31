@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Briefcase, Sparkles, Users, TrendingUp, TrendingDown, Minus, MoreHorizontal } from "lucide-react";
+import { Briefcase, Sparkles, Users, TrendingUp, TrendingDown, Minus, MoreHorizontal, Plus } from "lucide-react";
 import { ApplicationSourcesChart } from "@/components/dashboard/ApplicationSourcesChart";
 import { CandidateInflowChart } from "@/components/dashboard/CandidateInflowChart";
 import { ScreeningTargetsCard } from "@/components/dashboard/ScreeningTargetsCard";
@@ -16,6 +16,8 @@ import { ROUTES } from "@/lib/constants";
 import { cn, formatShortDate, formatNumber } from "@/lib/utils";
 import { mockDashboardStats, mockJobs } from "@/lib/mockData";
 import type { Trend } from "@/types";
+
+export const dynamic = 'force-dynamic';
 
 function sparkFromSeed(seed: number) {
   return Array.from({ length: 8 }, (_, i) => ({ i, v: seed + i * 2 + ((i + seed) % 3) * 3 }));
@@ -93,7 +95,7 @@ export default function DashboardPage() {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
       <PageHeader
         title="Dashboard"
-        subtitle="Welcome back — here’s what’s happening with recruitment and AI screening."
+        subtitle="Welcome back — here's what's happening with recruitment and AI screening."
       />
 
       <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">

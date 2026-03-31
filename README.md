@@ -34,7 +34,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000` (root redirects to `/dashboard`).
+Open `http://localhost:3000` — you’ll land on the **marketing homepage**. Use **Get started** / **Sign in** for the auth screens (demo: no real backend; forms redirect into the app).
 
 ## Environment variables
 
@@ -43,7 +43,15 @@ All API calls go through `src/lib/api.ts` (Axios) and use:
 - `NEXT_PUBLIC_API_URL`
   - If omitted, the app runs in **mock mode** (`mock://local`) with realistic local dummy data.
 
-## Routes implemented
+## Routes
+
+### Public
+
+- **Landing**: `/`
+- **Login** (demo): `/login`
+- **Register** (demo): `/register`
+
+### App (after sign-in / “Skip to app demo”)
 
 - **Dashboard**: `/dashboard`
 - **Create Job (4-step)**: `/jobs/new`
@@ -59,6 +67,14 @@ All API calls go through `src/lib/api.ts` (Axios) and use:
 A floating **TalentScreen Copilot** widget is included globally (mock responses) at:
 
 - `src/components/chat/ChatBotWidget.tsx`
+
+## What to improve next (suggested)
+
+1. **Real auth** — Replace demo login/register with NextAuth, Clerk, or your API; protect `/dashboard` and below with middleware.
+2. **One shell for all app routes** — Reuse the dashboard layout (sidebar + header) for jobs, screening, and candidates so navigation is consistent everywhere.
+3. **Mobile nav** — Add a drawer/hamburger when the sidebar is hidden.
+4. **Jobs index** — Add `/jobs` listing before “new” and detail.
+5. **Tests** — Smoke tests for landing → login → dashboard and a screening flow.
 
 ## Notes
 
