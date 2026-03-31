@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Home,
   LayoutDashboard,
@@ -9,6 +10,7 @@ import {
   LogOut,
   Zap,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
 
@@ -56,7 +58,7 @@ function NavLink({
           "group flex items-center gap-3 rounded-input px-3 py-2.5 text-sm font-medium transition-colors",
           active
             ? "bg-accent text-white shadow-sm shadow-accent/20"
-            : "text-white/70 hover:bg-white/5 hover:text-white",
+            : "text-white/70 hover:bg-black/20 hover:text-white",
         )}
       >
         <Icon className={cn("h-[18px] w-[18px] shrink-0", active ? "text-white" : "text-white/50")} />
@@ -72,9 +74,16 @@ function NavLink({
 }
 
 export function Sidebar({ pathname }: { pathname: string }) {
+  const router = useRouter();
+
+  const handleSignOut = () => {
+    toast.success("Signed out successfully");
+    router.push(ROUTES.login);
+  };
+
   return (
-    <aside className="hidden h-screen w-[260px] shrink-0 flex-col border-r border-white/10 bg-primary md:flex">
-      <div className="flex h-16 items-center gap-3 border-b border-white/10 px-5">
+    <aside className="hidden h-screen w-[260px] shrink-0 flex-col overflow-hidden border-r border-white/10 bg-primary md:flex">
+      <div className="flex h-16 items-center gap-3 border-b border-white/10 px-5 py-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-input bg-accent text-white shadow-sm shadow-accent/30">
           <Zap className="h-5 w-5" />
         </div>
@@ -84,7 +93,7 @@ export function Sidebar({ pathname }: { pathname: string }) {
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto pb-4">
+      <nav className="flex-1 overflow-y-auto pb-0">
         <NavSection title="Overview">
           <NavLink href={ROUTES.home} label="Home" icon={Home} pathname={pathname} />
           <NavLink href={ROUTES.dashboard} label="Dashboard" icon={LayoutDashboard} pathname={pathname} />
@@ -114,23 +123,24 @@ export function Sidebar({ pathname }: { pathname: string }) {
         </NavSection>
       </nav>
 
-      <div className="border-t border-white/10 p-4">
-        <div className="flex items-center gap-3 rounded-input bg-white/5 px-3 py-2.5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white">
+      <div className="border-t border-white/10 p-4 space-y-3">
+        <div className="flex items-center gap-3 rounded-input bg-black/20 px-3 py-2.5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/20 text-xs font-bold text-white">
             AR
           </div>
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-semibold text-white">A. Recruiter</div>
             <div className="truncate text-xs text-white/50">HR Recruiter</div>
           </div>
-          <Link
-            href={ROUTES.login}
-            className="shrink-0 rounded-input p-2 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
-            aria-label="Sign out"
-          >
-            <LogOut className="h-4 w-4" />
-          </Link>
         </div>
+        <button
+          onClick={handleSignOut}
+          className="w-full flex items-center justify-center gap-2 rounded-input bg-black/20 hover:bg-black/30 px-3 py-2.5 text-sm font-medium text-white/70 hover:text-white transition-colors"
+          aria-label="Sign out"
+        >
+          <LogOut className="h-4 w-4" />
+          <span>Sign out</span>
+        </button>
       </div>
     </aside>
   );

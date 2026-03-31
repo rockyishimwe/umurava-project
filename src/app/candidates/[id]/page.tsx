@@ -54,10 +54,11 @@ export default function CandidateDetailPage() {
   const overall = score?.score ?? 0;
 
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="space-y-8">
       <PageHeader
         title={candidate.name}
         subtitle={`${candidate.currentTitle}${candidate.company ? ` • ${candidate.company}` : ""}`}
+        backHref="/dashboard"
         right={
           <>
             <Button
@@ -80,14 +81,7 @@ export default function CandidateDetailPage() {
         }
       />
 
-      <div className="mt-4">
-        <Link href={`/screening/${job.id}/results`} className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary">
-          <ArrowLeft className="h-4 w-4" />
-          Back to results
-        </Link>
-      </div>
-
-      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Profile" subtitle={`${candidate.location} • ${candidate.yearsExperience} years experience`} />
           <CardBody>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Zap } from "lucide-react";
+import { Zap, ArrowLeft } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
 
 export function AuthShell({
@@ -16,10 +16,19 @@ export function AuthShell({
   return (
     <div className="relative min-h-screen overflow-hidden bg-bg">
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(59,130,246,0.18),transparent)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(34,197,94,0.18),transparent)]"
         aria-hidden
       />
       <div className="relative mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-12 sm:px-6">
+        {/* Back Button */}
+        <Link
+          href={ROUTES.home}
+          className="mb-6 inline-flex items-center gap-2 w-fit text-text-muted hover:text-accent transition-colors rounded-input p-2 hover:bg-bg"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span className="text-sm font-medium">Back to home</span>
+        </Link>
+
         <div className="mb-8 text-center">
           <Link
             href={ROUTES.home}

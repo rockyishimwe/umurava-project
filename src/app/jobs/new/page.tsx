@@ -107,13 +107,13 @@ export default function NewJobPage() {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
       <PageHeader title="Create New Job" subtitle="A multi-step flow to launch AI screening-ready roles." />
 
-      <div className="mt-6">
+      <div className="mt-8">
         <Card className="p-5">
           <Stepper step={step} />
         </Card>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-8">
         {step === 1 ? (
           <Card>
             <CardHeader title="Step 1 — Basic Information" subtitle="Define the role and logistics." />

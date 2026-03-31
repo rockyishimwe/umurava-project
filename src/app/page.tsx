@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   BarChart3,
@@ -8,14 +12,20 @@ import {
   Sparkles,
   Users,
   Zap,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ROUTES } from "@/lib/constants";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 export default function LandingPage() {
+  const { theme, toggleTheme } = useTheme();
+  const router = useRouter();
+
   return (
     <div className="min-h-screen bg-bg">
-      <header className="sticky top-0 z-40 border-b border-border bg-card/90 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-border bg-card">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href={ROUTES.home} className="flex items-center gap-2 font-bold text-text-primary">
             <span className="flex h-9 w-9 items-center justify-center rounded-input bg-accent text-white shadow-sm">
@@ -24,14 +34,33 @@ export default function LandingPage() {
             TalentScreen AI
           </Link>
           <nav className="flex items-center gap-2 sm:gap-3">
+            <button
+              onClick={toggleTheme}
+              className="rounded-input p-2 text-text-muted hover:bg-bg hover:text-text-primary transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
+            <Link
+              href="/about"
+              className="hidden rounded-input px-3 py-2 text-sm font-semibold text-text-muted hover:text-text-primary transition-colors sm:inline-block"
+            >
+              About
+            </Link>
+            <Link
+              href="/contact"
+              className="hidden rounded-input px-3 py-2 text-sm font-semibold text-text-muted hover:text-text-primary transition-colors sm:inline-block"
+            >
+              Contact
+            </Link>
             <Link
               href={ROUTES.login}
-              className="hidden rounded-input px-3 py-2 text-sm font-semibold text-text-muted hover:bg-bg hover:text-text-primary sm:inline-block"
+              className="hidden rounded-input px-3 py-2 text-sm font-semibold text-text-muted hover:bg-bg hover:text-text-primary sm:inline-block transition-colors"
             >
               Sign in
             </Link>
             <Link href={ROUTES.register}>
-              <Button className="h-10 px-4">Get started</Button>
+              <Button size="md">Get started</Button>
             </Link>
           </nav>
         </div>
@@ -40,9 +69,13 @@ export default function LandingPage() {
       <main>
         <section className="relative overflow-hidden border-b border-border">
           <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_60%_at_50%_-10%,rgba(59,130,246,0.2),transparent)]"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_60%_at_50%_-10%,rgba(34,197,94,0.15),transparent)]"
             aria-hidden
           />
+          {/* Decorative background elements */}
+          <div className="pointer-events-none absolute -right-40 top-0 h-80 w-80 rounded-full bg-accent/5 blur-3xl" />
+          <div className="pointer-events-none absolute -left-40 bottom-0 h-80 w-80 rounded-full bg-accent/5 blur-3xl" />
+          
           <div className="relative mx-auto max-w-6xl px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24">
             <div className="mx-auto max-w-3xl text-center">
               <p className="inline-flex items-center gap-2 rounded-badge border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
@@ -58,7 +91,7 @@ export default function LandingPage() {
               </p>
               <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
                 <Link href={ROUTES.register} className="sm:w-auto">
-                  <Button className="h-12 w-full px-8 text-base shadow-md sm:w-auto">
+                  <Button size="lg" className="w-full sm:w-auto shadow-md">
                     Start free <ArrowRight className="ml-2 inline h-4 w-4" />
                   </Button>
                 </Link>
@@ -71,6 +104,30 @@ export default function LandingPage() {
               <p className="mt-6 text-sm text-text-muted">
                 No backend required for the demo — explore the full UI after sign-in.
               </p>
+            </div>
+
+            {/* Visual showcase with SVG images */}
+            <div className="mx-auto mt-20 grid max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { src: "/ai-screening.svg", label: "AI Screening", alt: "AI-powered screening" },
+                { src: "/job-posting.svg", label: "Job Posting", alt: "Quick job posting" },
+                { src: "/analytics.svg", label: "Analytics", alt: "Real-time analytics" },
+                { src: "/candidates.svg", label: "Candidates", alt: "Manage candidates" },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-card border border-border bg-card p-6 shadow-card hover:shadow-lg transition-all hover:border-accent/30 group"
+                >
+                  <div className="relative h-40 w-full mb-4 flex items-center justify-center rounded-input bg-gradient-to-br from-accent/5 to-accent/10">
+                    <img
+                      src={item.src}
+                      alt={item.alt}
+                      className="h-24 w-24 group-hover:scale-110 transition-transform duration-300"
+                    />
+                  </div>
+                  <p className="text-center text-sm font-semibold text-text-primary">{item.label}</p>
+                </div>
+              ))}
             </div>
 
             <div className="mx-auto mt-16 grid max-w-4xl gap-4 sm:grid-cols-3">
@@ -91,7 +148,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="border-b border-border py-16 sm:py-20">
+        <section className="border-b border-border py-16 sm:py-20 bg-gradient-to-b from-accent/5 to-bg">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <h2 className="text-center text-2xl font-bold text-text-primary sm:text-3xl">
               Everything recruiters need in one flow
@@ -125,12 +182,12 @@ export default function LandingPage() {
               ].map((f) => (
                 <li
                   key={f.title}
-                  className="rounded-card border border-border bg-card p-6 shadow-card transition-shadow hover:shadow-md"
+                  className="rounded-card border border-border bg-card p-6 shadow-card transition-all hover:shadow-lg hover:border-accent/30 group"
                 >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-input bg-accent/10 text-accent">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-input bg-accent/10 text-accent group-hover:bg-accent/20 transition-colors">
                     <f.icon className="h-5 w-5" />
                   </div>
-                  <h3 className="mt-4 font-semibold text-text-primary">{f.title}</h3>
+                  <h3 className="mt-4 font-semibold text-text-primary group-hover:text-accent transition-colors">{f.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-text-muted">{f.body}</p>
                 </li>
               ))}
@@ -138,21 +195,27 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="py-16 sm:py-20">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <section className="py-16 sm:py-20 relative overflow-hidden">
+          {/* Background gradient elements */}
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-accent/10 blur-3xl" />
+            <div className="absolute left-0 bottom-0 h-96 w-96 rounded-full bg-accent/10 blur-3xl" />
+          </div>
+
+          <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
             <div className="overflow-hidden rounded-card border border-border bg-primary text-white shadow-modal">
               <div className="grid gap-8 p-8 sm:grid-cols-2 sm:items-center sm:p-12">
                 <div>
                   <h2 className="text-2xl font-bold sm:text-3xl">Ready to see it in action?</h2>
                   <p className="mt-3 text-white/80">
                     Create an account (demo), then open the dashboard, launch a job, and walk through
-                    screening end-to-end.
+                    screening end-to-end with real-time analytics.
                   </p>
                   <ul className="mt-6 space-y-2 text-sm text-white/90">
                     {["Dashboard & analytics", "Multi-step job builder", "Shortlist with AI reasoning"].map(
                       (t) => (
                         <li key={t} className="flex items-center gap-2">
-                          <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-accent" />
                           {t}
                         </li>
                       ),
@@ -161,7 +224,7 @@ export default function LandingPage() {
                 </div>
                 <div className="flex flex-col gap-3 sm:items-end">
                   <Link href={ROUTES.register} className="w-full sm:w-auto">
-                    <Button className="h-12 w-full bg-white px-8 text-base text-primary hover:bg-bg sm:w-auto">
+                    <Button size="lg" className="w-full sm:w-auto font-semibold">
                       Create account
                     </Button>
                   </Link>
@@ -179,13 +242,19 @@ export default function LandingPage() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 text-sm text-text-muted sm:flex-row sm:px-6">
           <p>© {new Date().getFullYear()} TalentScreen AI · Demo frontend</p>
           <div className="flex gap-6">
-            <Link href={ROUTES.login} className="hover:text-text-primary">
+            <Link href="/about" className="hover:text-text-primary transition-colors">
+              About
+            </Link>
+            <Link href="/contact" className="hover:text-text-primary transition-colors">
+              Contact
+            </Link>
+            <Link href={ROUTES.login} className="hover:text-text-primary transition-colors">
               Sign in
             </Link>
-            <Link href={ROUTES.register} className="hover:text-text-primary">
+            <Link href={ROUTES.register} className="hover:text-text-primary transition-colors">
               Register
             </Link>
-            <Link href={ROUTES.dashboard} className="hover:text-text-primary">
+            <Link href={ROUTES.dashboard} className="hover:text-text-primary transition-colors">
               Dashboard
             </Link>
           </div>

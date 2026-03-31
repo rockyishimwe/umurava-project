@@ -45,6 +45,7 @@ export default function ScreeningIngestionPage() {
       <PageHeader
         title="Applicant Ingestion"
         subtitle="Select candidates from Umurava profiles or upload external resumes."
+        backHref="/dashboard"
         right={
           <div className="rounded-badge border border-border bg-bg px-3 py-1 text-xs font-semibold text-text-muted">
             Job: {jobId}
@@ -52,7 +53,7 @@ export default function ScreeningIngestionPage() {
         }
       />
 
-      <div className="mt-6 flex flex-wrap items-center gap-2">
+      <div className="mt-8 flex flex-wrap items-center gap-2">
         <button
           className={[
             "rounded-badge border px-4 py-2 text-sm font-semibold",
@@ -76,7 +77,7 @@ export default function ScreeningIngestionPage() {
       </div>
 
       {tab === "umurava" ? (
-        <div className="mt-4">
+        <div className="mt-6">
           <Card className="p-4">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="relative flex-1">

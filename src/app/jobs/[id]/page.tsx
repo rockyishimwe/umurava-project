@@ -34,6 +34,7 @@ export default function JobDetailPage() {
       <PageHeader
         title={job.title}
         subtitle={`${job.department} • ${job.location}`}
+        backHref="/jobs/new"
         right={
           <Link href={`/screening/${job.id}`}>
             <Button>
@@ -44,14 +45,7 @@ export default function JobDetailPage() {
         }
       />
 
-      <div className="mt-4">
-        <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary">
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </Link>
-      </div>
-
-      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader title="Job Overview" subtitle="Key details used for screening." />
           <CardBody>

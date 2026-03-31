@@ -4,6 +4,8 @@ export const ROUTES = {
   login: "/login",
   register: "/register",
   newJob: "/jobs/new",
+  contact: "/contact",
+  about: "/about",
 } as const;
 
 export const SCORE_THRESHOLDS = {

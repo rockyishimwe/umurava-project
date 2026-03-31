@@ -143,6 +143,7 @@ export default function ResultsPage() {
       <PageHeader
         title="Shortlist Results"
         subtitle={`${job.title} • ${job.department}`}
+        backHref={`/screening/${job.id}`}
         right={
           <>
             <Button
@@ -163,7 +164,7 @@ export default function ResultsPage() {
         }
       />
 
-      <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
         {[
           { label: "Total Screened", value: summary.total, variant: "default" as const },
           { label: "Highly Qualified", value: summary.qualified, variant: "success" as const, meta: "Score 80+" },
@@ -185,7 +186,7 @@ export default function ResultsPage() {
         ))}
       </div>
 
-      <div className="mt-6 rounded-card border border-border bg-card p-4">
+      <div className="mt-8 rounded-card border border-border bg-card p-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />

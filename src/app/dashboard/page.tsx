@@ -98,7 +98,7 @@ export default function DashboardPage() {
         subtitle="Welcome back — here's what's happening with recruitment and AI screening."
       />
 
-      <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Active Jobs"
           value={formatNumber(mockDashboardStats.activeJobs.value)}
@@ -135,17 +135,17 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-3">
+      <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div className="xl:col-span-2">
           <CandidateInflowChart />
         </div>
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-6">
           <ApplicationSourcesChart />
           <ScreeningTargetsCard />
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-8">
         <Card>
           <CardHeader title="Recent Jobs" subtitle="Latest pipeline activity across your roles." />
           <CardBody className="px-0 pb-0">
@@ -218,7 +218,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 260, damping: 22 }}>
           <Link href={ROUTES.newJob} className="block">
             <div className="rounded-card border border-accent/25 bg-accent p-6 text-white shadow-card">
