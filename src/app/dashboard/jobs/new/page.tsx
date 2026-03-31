@@ -73,6 +73,9 @@ export default function NewJobPage() {
     updatedAtISO: new Date().toISOString(),
   }));
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
   const summary = useMemo(
     () => [
       { k: "Job Title", v: form.title || "—" },
@@ -91,15 +94,110 @@ export default function NewJobPage() {
     [form],
   );
 
-  function next() {
-    if (step === 1 && !form.title.trim()) {
-      toast.error("Job title is required.");
-      return;
+  function validateStep1() {
+    const newErrors: Record<string, string> = {};
+    
+    if (!form.title.trim()) {
+      newErrors.title = "Job title is required";
+    } else if (form.title.trim().length < 3) {
+      newErrors.title = "Job title must be at least 3 characters";
     }
+
+    if (!form.department.trim()) {
+      newErrors.department = "Department is required";
+    } else if (form.department.trim().length < 2) {
+      newErrors.department = "Department must be at least 2 characters";
+    }
+
+    if (!form.location.trim()) {
+      newErrors.location = "Location is required";
+    } else if (form.location.trim().length < 2) {
+      newErrors.location = "Location must be at least 2 characters";
+    }
+
+    if (form.salaryMin && form.salaryMin < 0) {
+      newErrors.salaryMin = "Salary must be a positive number";
+    }
+
+    if (form.salaryMax && form.salaryMax < 0) {
+      newErrors.salaryMax = "Salary must be a positive number";
+    }
+
+    if (form.salaryMin && form.salaryMax && form.salaryMin > form.salaryMax) {
+      newErrors.salaryRange = "Minimum salary cannot exceed maximum salary";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }
+
+  function validateStep2() {
+    const newErrors: Record<string, string> = {};
+
+    if (!form.description.trim()) {
+      newErrors.description = "Description is required";
+    } else if (form.description.trim().length < 20) {
+      newErrors.description = "Description must be at least 20 characters";
+    }
+
+    if (!form.responsibilities.trim()) {
+      newErrors.responsibilities = "Responsibilities are required";
+    } else if (form.responsibilities.trim().length < 20) {
+      newErrors.responsibilities = "Responsibilities must be at least 20 characters";
+    }
+
+    if (!form.qualifications.trim()) {
+      newErrors.qualifications = "Qualifications are required";
+    } else if (form.qualifications.trim().length < 20) {
+      newErrors.qualifications = "Qualifications must be at least 20 characters";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }
+
+  function validateStep3() {
+    const newErrors: Record<string, string> = {};
+
+    if (!form.aiCriteria.mustHaveSkills.trim()) {
+      newErrors.mustHaveSkills = "Must-have skills are required for screening";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }
+
+  function next() {
+    let isValid = false;
+
+    if (step === 1) {
+      isValid = validateStep1();
+      if (!isValid) {
+        toast.error("Please fix the errors before proceeding");
+        return;
+      }
+    } else if (step === 2) {
+      isValid = validateStep2();
+      if (!isValid) {
+        toast.error("Please fill in all details before proceeding");
+        return;
+      }
+    } else if (step === 3) {
+      isValid = validateStep3();
+      if (!isValid) {
+        toast.error("Please define AI criteria to proceed");
+        return;
+      }
+    }
+
+    setErrors({});
+    setTouched({});
     setStep((s) => (s < 4 ? ((s + 1) as Step) : s));
   }
 
   function back() {
+    setErrors({});
+    setTouched({});
     setStep((s) => (s > 1 ? ((s - 1) as Step) : s));
   }
 

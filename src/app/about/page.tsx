@@ -124,12 +124,12 @@ export default function AboutPage() {
           <h2 className="text-2xl font-bold text-text-primary mb-8">Why Choose RankWise?</h2>
           <div className="space-y-4">
             {[
-              "⚡ Fast & Efficient - Screen hundreds of candidates in minutes",
-              "🎯 AI-Powered - Advanced algorithms reduce hiring bias",
-              "📊 Data-Driven - Get insights that improve hiring outcomes",
-              "🔒 Secure - Enterprise-grade security and compliance",
-              "🤝 Easy Integration - Seamless integration with your workflow",
-              "👥 Human-Centered - AI augments human judgment, not replaces it",
+              " Fast & Efficient - Screen hundreds of candidates in minutes",
+              " AI-Powered - Advanced algorithms reduce hiring bias",
+              " Data-Driven - Get insights that improve hiring outcomes",
+              " Secure - Enterprise-grade security and compliance",
+              " Easy Integration - Seamless integration with your workflow",
+              " Human-Centered - AI augments human judgment, not replaces it",
             ].map((item, index) => (
               <div key={index} className="flex items-center gap-4 py-2">
                 <div className="h-2 w-2 rounded-full bg-accent flex-shrink-0" />
