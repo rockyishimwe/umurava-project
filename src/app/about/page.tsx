@@ -25,7 +25,7 @@ export default function AboutPage() {
               <span className="flex h-9 w-9 items-center justify-center rounded-input bg-accent text-white shadow-sm">
                 <Zap className="h-5 w-5" />
               </span>
-              <span className="hidden sm:inline">TalentScreen AI</span>
+              <span className="hidden sm:inline">RankWise</span>
             </Link>
           </div>
           <div className="flex items-center gap-2">
@@ -49,7 +49,7 @@ export default function AboutPage() {
         {/* Hero Section */}
         <section className="mx-auto mb-16 max-w-4xl text-center sm:mb-20">
           <div className="mb-6 inline-block rounded-full bg-accent/10 px-4 py-2">
-            <p className="text-sm font-semibold text-accent">About TalentScreen AI</p>
+            <p className="text-sm font-semibold text-accent">About RankWise</p>
           </div>
           <h1 className="text-4xl font-bold tracking-tight text-text-primary sm:text-5xl mb-4">
             Transform Your Hiring Process
@@ -121,7 +121,7 @@ export default function AboutPage() {
 
         {/* Why Choose Us */}
         <section className="mx-auto mb-16 max-w-4xl rounded-card border border-border bg-card/50 p-8 sm:p-12">
-          <h2 className="text-2xl font-bold text-text-primary mb-8">Why Choose TalentScreen AI?</h2>
+          <h2 className="text-2xl font-bold text-text-primary mb-8">Why Choose RankWise?</h2>
           <div className="space-y-4">
             {[
               "⚡ Fast & Efficient - Screen hundreds of candidates in minutes",
@@ -143,7 +143,7 @@ export default function AboutPage() {
         <section className="mx-auto max-w-2xl text-center">
           <h2 className="text-2xl font-bold text-text-primary mb-4">Ready to Transform Your Hiring?</h2>
           <p className="text-text-muted mb-8">
-            Join hundreds of companies already using TalentScreen AI to build better teams.
+            Join hundreds of companies already using RankWise to build better teams.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link href={ROUTES.register}>

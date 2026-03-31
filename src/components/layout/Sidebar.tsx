@@ -14,7 +14,7 @@ import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
 
-const system = [{ label: "Settings", href: "/settings", icon: Settings }] as const;
+const system = [{ label: "Settings", href: "/dashboard/settings", icon: Settings }] as const;
 
 function NavSection({
   title,
@@ -88,8 +88,7 @@ export function Sidebar({ pathname }: { pathname: string }) {
           <Zap className="h-5 w-5" />
         </div>
         <div>
-          <div className="text-sm font-bold tracking-tight text-white">TalentScreen</div>
-          <div className="text-[10px] font-semibold uppercase tracking-widest text-white/45">AI</div>
+          <div className="text-sm font-bold tracking-tight text-white">RankWise</div>
         </div>
       </div>
 
@@ -99,21 +98,21 @@ export function Sidebar({ pathname }: { pathname: string }) {
           <NavLink href={ROUTES.dashboard} label="Dashboard" icon={LayoutDashboard} pathname={pathname} />
         </NavSection>
         <NavSection title="Pipeline">
-          <NavLink href="/jobs/new" label="Jobs" icon={Briefcase} pathname={pathname} prefixMatch="/jobs" />
+          <NavLink href="/dashboard/jobs/new" label="Jobs" icon={Briefcase} pathname={pathname} prefixMatch="/dashboard/jobs" />
           <NavLink
-            href="/screening/job_001"
+            href="/dashboard/screening/job_001"
             label="Screening"
             icon={Sparkles}
             pathname={pathname}
-            prefixMatch="/screening"
+            prefixMatch="/dashboard/screening"
             badge={3}
           />
           <NavLink
-            href="/candidates/cand_001"
+            href="/dashboard/candidates/cand_001"
             label="Candidates"
             icon={Users}
             pathname={pathname}
-            prefixMatch="/candidates"
+            prefixMatch="/dashboard/candidates"
           />
         </NavSection>
         <NavSection title="System">

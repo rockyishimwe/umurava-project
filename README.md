@@ -1,6 +1,6 @@
-# TalentScreen AI (Frontend)
+# RankWise (Frontend)
 
-Production-ready frontend for **TalentScreen AI** — an AI-powered candidate screening tool for HR recruiters (Umurava AI Hackathon).
+Production-ready frontend for **RankWise** — an AI-powered candidate screening tool for HR recruiters (Umurava AI Hackathon).
 
 ## Tech stack (strict)
 
@@ -64,7 +64,7 @@ All API calls go through `src/lib/api.ts` (Axios) and use:
 
 ## Chatbot (demo)
 
-A floating **TalentScreen Copilot** widget is included globally (mock responses) at:
+A floating **RankWise Copilot** widget is included globally (mock responses) at:
 
 - `src/components/chat/ChatBotWidget.tsx`
 

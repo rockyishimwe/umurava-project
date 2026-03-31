@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TalentScreen AI",
+  title: "RankWise",
   description: "AI-powered candidate screening tool for recruiters",
 };
 

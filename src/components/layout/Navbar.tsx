@@ -35,7 +35,7 @@ export function Navbar() {
         <div className="flex h-9 w-9 items-center justify-center rounded-input bg-primary text-white font-bold">
           TS
         </div>
-        <div className="font-semibold text-text-primary">TalentScreen AI</div>
+        <div className="font-semibold text-text-primary">RankWise</div>
       </div>
 
       <div className="flex items-center gap-3">

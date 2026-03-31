@@ -31,7 +31,7 @@ export default function LandingPage() {
             <span className="flex h-9 w-9 items-center justify-center rounded-input bg-accent text-white shadow-sm">
               <Zap className="h-5 w-5" />
             </span>
-            TalentScreen AI
+            RankWise
           </Link>
           <nav className="flex items-center gap-2 sm:gap-3">
             <button
@@ -68,13 +68,31 @@ export default function LandingPage() {
 
       <main>
         <section className="relative overflow-hidden border-b border-border">
-          <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_60%_at_50%_-10%,rgba(34,197,94,0.15),transparent)]"
+          {/* Background grid pattern */}
+          <div 
+            className="pointer-events-none absolute inset-0 opacity-30"
+            style={{
+              backgroundImage: `linear-gradient(to right, rgba(34,197,94,0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(34,197,94,0.1) 1px, transparent 1px)`,
+              backgroundSize: '60px 60px',
+            }}
             aria-hidden
           />
-          {/* Decorative background elements */}
-          <div className="pointer-events-none absolute -right-40 top-0 h-80 w-80 rounded-full bg-accent/5 blur-3xl" />
-          <div className="pointer-events-none absolute -left-40 bottom-0 h-80 w-80 rounded-full bg-accent/5 blur-3xl" />
+          
+          {/* Animated gradient background */}
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_60%_at_50%_-10%,rgba(34,197,94,0.2),transparent)]"
+            aria-hidden
+          />
+          
+          {/* Decorative animated background elements */}
+          <div className="pointer-events-none absolute -right-40 top-0 h-80 w-80 rounded-full bg-accent/5 blur-3xl animate-float-slow" />
+          <div className="pointer-events-none absolute -left-40 bottom-0 h-80 w-80 rounded-full bg-accent/5 blur-3xl animate-float-slow" />
+          
+          {/* Animated floating particles */}
+          <div className="pointer-events-none absolute top-20 left-10 w-2 h-2 bg-accent/30 rounded-full animate-float" style={{ animationDelay: '0s' }} />
+          <div className="pointer-events-none absolute top-40 right-20 w-3 h-3 bg-accent/20 rounded-full animate-float" style={{ animationDelay: '0.5s' }} />
+          <div className="pointer-events-none absolute bottom-20 left-1/3 w-2 h-2 bg-accent/25 rounded-full animate-float" style={{ animationDelay: '1s' }} />
+          <div className="pointer-events-none absolute top-1/2 right-1/4 w-2.5 h-2.5 bg-accent/15 rounded-full animate-glow" />
           
           <div className="relative mx-auto max-w-6xl px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24">
             <div className="mx-auto max-w-3xl text-center">
@@ -86,7 +104,7 @@ export default function LandingPage() {
                 Screen candidates with clarity, speed, and explainable AI
               </h1>
               <p className="mt-5 text-lg text-text-muted sm:text-xl">
-                TalentScreen AI helps HR teams ingest applicants, run consistent scoring against your
+                RankWise helps HR teams ingest applicants, run consistent scoring against your
                 criteria, and shortlist with reasoning your hiring managers can trust.
               </p>
               <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
@@ -240,7 +258,7 @@ export default function LandingPage() {
 
       <footer className="border-t border-border py-10">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 text-sm text-text-muted sm:flex-row sm:px-6">
-          <p>© {new Date().getFullYear()} TalentScreen AI · Demo frontend</p>
+          <p>© {new Date().getFullYear()} RankWise · Demo frontend</p>
           <div className="flex gap-6">
             <Link href="/about" className="hover:text-text-primary transition-colors">
               About

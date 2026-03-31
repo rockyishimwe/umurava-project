@@ -44,7 +44,7 @@ export function ChatBotWidget() {
     {
       id: uid(),
       role: "assistant",
-      text: "Hi! I’m TalentScreen Copilot. I can help you create jobs, tune AI criteria, and interpret shortlist results.",
+      text: "Hi! I'm RankWise Copilot. I can help you create jobs, tune AI criteria, and interpret shortlist results.",
       ts: Date.now(),
     },
   ]);
@@ -104,7 +104,7 @@ export function ChatBotWidget() {
                     <Sparkles className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="text-sm font-semibold">TalentScreen Copilot</div>
+                    <div className="text-sm font-semibold">RankWise Copilot</div>
                     <div className="text-xs text-text-muted">Mock assistant for demo</div>
                   </div>
                 </div>
