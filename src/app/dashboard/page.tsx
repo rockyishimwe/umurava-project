@@ -62,7 +62,7 @@ function StatCard({
 }) {
   return (
     <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 260, damping: 22 }}>
-      <div className="rounded-card border border-border bg-card p-5 shadow-card">
+      <div className="rounded-card border border-border bg-card dark:bg-slate-800 p-5 shadow-card">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="text-sm font-medium text-text-muted">{title}</div>
@@ -113,7 +113,7 @@ export default function DashboardPage() {
         />
         <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-card border border-border bg-card p-5 shadow-card">
+            <div key={i} className="rounded-card border border-border bg-card dark:bg-slate-800 p-5 shadow-card">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <Skeleton className="h-4 w-20 mb-1" />
@@ -210,7 +210,7 @@ export default function DashboardPage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[820px] border-t border-border text-sm">
-                  <thead className="bg-bg">
+                  <thead className="bg-bg dark:bg-slate-700">
                     <tr className="text-left text-xs font-semibold uppercase tracking-wide text-text-muted">
                       <th className="px-5 py-3">Job Title</th>
                       <th className="px-5 py-3">Department</th>
@@ -225,7 +225,7 @@ export default function DashboardPage() {
                     {mockJobs.map((job) => (
                       <tr
                         key={job.id}
-                        className="border-t border-border transition-colors hover:bg-bg/70"
+                        className="border-t border-border transition-colors hover:bg-bg dark:hover:bg-slate-700/50"
                       >
                         <td className="px-5 py-4 font-semibold text-text-primary">{job.title}</td>
                         <td className="px-5 py-4 text-text-muted">{job.department}</td>
@@ -244,7 +244,7 @@ export default function DashboardPage() {
                               View →
                             </Link>
                             <button
-                              className="rounded-input p-2 text-text-muted hover:bg-bg hover:text-text-primary"
+                              className="rounded-input p-2 text-text-muted hover:bg-bg dark:hover:bg-slate-700 hover:text-text-primary"
                               aria-label="More"
                             >
                               <MoreHorizontal className="h-4 w-4" />
@@ -278,7 +278,7 @@ export default function DashboardPage() {
         </motion.div>
 
         <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 260, damping: 22 }}>
-          <div className="rounded-card border border-border bg-card p-6 shadow-card">
+          <div className="rounded-card border border-border bg-card dark:bg-slate-800 p-6 shadow-card">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-semibold text-text-muted">AI Insights</div>
@@ -293,7 +293,7 @@ export default function DashboardPage() {
         </motion.div>
 
         <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 260, damping: 22 }}>
-          <div className="rounded-card border border-border bg-card p-6 shadow-card">
+          <div className="rounded-card border border-border bg-card dark:bg-slate-800 p-6 shadow-card">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-sm font-semibold text-text-muted">Talent Pool</div>

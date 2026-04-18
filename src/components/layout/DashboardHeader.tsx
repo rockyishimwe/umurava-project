@@ -1,13 +1,62 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { Search, Bell, Moon, Sun, Globe, Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { ROUTES } from "@/lib/constants";
 
+const initialNotifications = [
+  {
+    id: "1",
+    title: "New candidate submitted",
+    description: "A candidate has completed screening for UX Designer.",
+    time: "2m ago",
+    read: false,
+  },
+  {
+    id: "2",
+    title: "New job activity",
+    description: "3 applicants updated their status in Product Manager.",
+    time: "15m ago",
+    read: false,
+  },
+  {
+    id: "3",
+    title: "Daily summary ready",
+    description: "Your recruitment dashboard is up to date.",
+    time: "1h ago",
+    read: true,
+  },
+];
+
 export function DashboardHeader() {
   const { theme, toggleTheme } = useTheme();
+  const [notifications, setNotifications] = useState(initialNotifications);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const unreadCount = notifications.filter((notification) => !notification.read).length;
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleToggleNotifications = () => {
+    setShowNotifications((current) => !current);
+  };
+
+  const markAllRead = () => {
+    setNotifications((current) => current.map((notification) => ({ ...notification, read: true })));
+  };
 
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 px-4 sm:px-6">
@@ -48,16 +97,62 @@ export function DashboardHeader() {
           <Globe className="h-4 w-4" />
         </button>
 
-        <button
-          type="button"
-          className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-text-muted transition-colors hover:bg-bg hover:text-text-primary"
-          aria-label="Notifications"
-        >
-          <Bell className="h-4 w-4" />
-          <span className="absolute -right-1 -top-1 h-5 w-5 rounded-full bg-danger text-[10px] font-bold text-white ring-2 ring-card flex items-center justify-center">
-            3
-          </span>
-        </button>
+        <div className="relative" ref={dropdownRef}>
+          <button
+            type="button"
+            onClick={handleToggleNotifications}
+            className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-text-muted transition-colors hover:bg-bg hover:text-text-primary"
+            aria-label="Notifications"
+            aria-expanded={showNotifications}
+          >
+            <Bell className="h-4 w-4" />
+            {unreadCount > 0 ? (
+              <span className="absolute -right-1 -top-1 h-5 w-5 rounded-full bg-danger text-[10px] font-bold text-white ring-2 ring-card flex items-center justify-center">
+                {unreadCount}
+              </span>
+            ) : null}
+          </button>
+
+          {showNotifications && (
+            <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-card border border-border bg-card shadow-modal">
+              <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                <div>
+                  <div className="text-sm font-semibold text-text-primary">Notifications</div>
+                  <div className="text-xs text-text-muted">{unreadCount} unread</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={markAllRead}
+                  className="rounded-full border border-border px-3 py-1 text-xs font-semibold text-text-primary hover:bg-bg transition-colors"
+                >
+                  Mark all read
+                </button>
+              </div>
+              <div className="max-h-72 overflow-y-auto">
+                {notifications.map((notification) => (
+                  <button
+                    key={notification.id}
+                    type="button"
+                    className={`flex w-full flex-col gap-1 px-4 py-3 text-left transition-colors hover:bg-bg ${
+                      notification.read ? "bg-card" : "bg-accent/5"
+                    }`}
+                    onClick={() => {
+                      setNotifications((current) =>
+                        current.map((item) =>
+                          item.id === notification.id ? { ...item, read: true } : item,
+                        ),
+                      );
+                    }}
+                  >
+                    <span className="text-sm font-semibold text-text-primary">{notification.title}</span>
+                    <span className="text-xs text-text-muted">{notification.description}</span>
+                    <span className="text-[11px] text-text-muted">{notification.time}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-sm font-bold text-accent ring-2 ring-accent/20">
           AR
