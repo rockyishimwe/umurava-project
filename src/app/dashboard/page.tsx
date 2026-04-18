@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { ROUTES } from "@/lib/constants";
 import { cn, formatShortDate, formatNumber } from "@/lib/utils";
 import { mockJobs } from "@/lib/mockData";
