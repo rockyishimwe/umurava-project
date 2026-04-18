@@ -1,3 +1,5 @@
+import DOMPurify from 'dompurify';
+
 export function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
@@ -20,5 +22,9 @@ export function initials(name: string) {
 
 export function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
+}
+
+export function sanitizeHtml(html: string): string {
+  return DOMPurify.sanitize(html, { ALLOWED_TAGS: [] }); // strip all tags for text only
 }
 

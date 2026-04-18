@@ -1,6 +1,7 @@
 import axios, { type AxiosInstance } from "axios";
 import { mockCandidates, mockCandidateScores, mockDashboardStats, mockJobs } from "@/lib/mockData";
 import type { Candidate, CandidateScore, DashboardStats, Job } from "@/types";
+import { dashboardStatsSchema } from "@/types";
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL || "mock://local";
 
@@ -8,6 +9,15 @@ export const api: AxiosInstance = axios.create({
   baseURL,
   timeout: 15000,
 });
+
+// Add response interceptor for error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('API Error:', error);
+    return Promise.reject(error);
+  }
+);
 
 type MockResponse<T> = { data: T };
 
@@ -51,12 +61,20 @@ async function mockGet<T>(path: string): Promise<MockResponse<T>> {
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
-  if (baseURL.startsWith("mock://")) {
-    const res = await mockGet<DashboardStats>("/dashboard/stats");
-    return res.data;
+  try {
+    let data: DashboardStats;
+    if (baseURL.startsWith("mock://")) {
+      const res = await mockGet<DashboardStats>("/dashboard/stats");
+      data = res.data;
+    } else {
+      const res = await api.get<DashboardStats>("/dashboard/stats");
+      data = res.data;
+    }
+    return dashboardStatsSchema.parse(data);
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    throw error;
   }
-  const res = await api.get<DashboardStats>("/dashboard/stats");
-  return res.data;
 }
 
 export async function getJobs(): Promise<Job[]> {

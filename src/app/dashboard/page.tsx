@@ -11,10 +11,10 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { ROUTES } from "@/lib/constants";
 import { cn, formatShortDate, formatNumber } from "@/lib/utils";
-import { mockDashboardStats, mockJobs } from "@/lib/mockData";
+import { mockJobs } from "@/lib/mockData";
+import { useDashboardStats } from "@/hooks/useDashboard";
 import type { Trend } from "@/types";
 
 export const dynamic = 'force-dynamic';
@@ -89,7 +89,49 @@ function statusBadgeVariant(status: string) {
 }
 
 export default function DashboardPage() {
-  const loading = false;
+  const { data: stats, isLoading, error } = useDashboardStats();
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-danger mb-2">Failed to load dashboard</h2>
+          <p className="text-text-muted mb-4">Please try again later.</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+        <PageHeader
+          title="Dashboard"
+          subtitle="Welcome back — here's what's happening with recruitment and AI screening."
+        />
+        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="rounded-card border border-border bg-card p-5 shadow-card">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <Skeleton className="h-4 w-20 mb-1" />
+                  <Skeleton className="h-9 w-28 mb-3" />
+                  <Skeleton className="h-3 w-40" />
+                </div>
+                <Skeleton className="h-11 w-11 rounded-full" />
+              </div>
+              <Skeleton className="mt-4 h-12 w-full rounded-input" />
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    );
+  }
+
+  if (!stats) {
+    return null;
+  }
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
@@ -101,37 +143,37 @@ export default function DashboardPage() {
       <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Active Jobs"
-          value={formatNumber(mockDashboardStats.activeJobs.value)}
+          value={formatNumber(stats.activeJobs.value)}
           icon={Briefcase}
-          trend={mockDashboardStats.activeJobs.trend}
+          trend={stats.activeJobs.trend}
           spark={sparkFromSeed(4)}
-          loading={loading}
+          loading={isLoading}
         />
         <StatCard
           title="Total Applicants"
-          value={formatNumber(mockDashboardStats.totalApplicants.value)}
+          value={formatNumber(stats.totalApplicants.value)}
           icon={Users}
-          trend={mockDashboardStats.totalApplicants.trend}
+          trend={stats.totalApplicants.trend}
           spark={sparkFromSeed(18)}
-          loading={loading}
+          loading={isLoading}
         />
         <StatCard
           title="Shortlisted"
-          value={formatNumber(mockDashboardStats.shortlisted.value)}
+          value={formatNumber(stats.shortlisted.value)}
           icon={Sparkles}
-          trend={mockDashboardStats.shortlisted.trend}
-          meta={`Conversion: ${mockDashboardStats.shortlisted.conversionRatePct}%`}
+          trend={stats.shortlisted.trend}
+          meta={`Conversion: ${stats.shortlisted.conversionRatePct}%`}
           spark={sparkFromSeed(6)}
-          loading={loading}
+          loading={isLoading}
         />
         <StatCard
           title="In Screening"
-          value={formatNumber(mockDashboardStats.inScreening.value)}
+          value={formatNumber(stats.inScreening.value)}
           icon={Sparkles}
-          trend={mockDashboardStats.inScreening.trend}
-          meta={`Avg time: ${mockDashboardStats.inScreening.avgTimePerCandidateMins}m / candidate`}
+          trend={stats.inScreening.trend}
+          meta={`Avg time: ${stats.inScreening.avgTimePerCandidateMins}m / candidate`}
           spark={sparkFromSeed(10)}
-          loading={loading}
+          loading={isLoading}
         />
       </div>
 

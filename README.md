@@ -1,6 +1,6 @@
-# RankWise (Frontend)
+# WiseRank (Frontend)
 
-Production-ready frontend for **RankWise** — an AI-powered candidate screening tool for HR recruiters (Umurava AI Hackathon).
+Production-ready frontend for **WiseRank** — an AI-powered candidate screening tool for HR recruiters.
 
 ## Tech stack (strict)
 
@@ -42,6 +42,39 @@ All API calls go through `src/lib/api.ts` (Axios) and use:
 
 - `NEXT_PUBLIC_API_URL`
   - If omitted, the app runs in **mock mode** (`mock://local`) with realistic local dummy data.
+
+## API Documentation
+
+The app interacts with the following endpoints:
+
+- `GET /dashboard/stats` - Dashboard statistics
+- `GET /jobs` - List all jobs
+- `GET /jobs/:id` - Get job details
+- `GET /candidates` - List all candidates
+- `GET /candidates/:id` - Get candidate details
+- `GET /screening/results?jobId=:id` - Screening results for a job
+
+All endpoints return JSON data. In mock mode, responses are simulated with delays.
+
+## Deployment
+
+### Vercel
+
+1. Connect your GitHub repo to Vercel.
+2. Set environment variables in Vercel dashboard.
+3. Deploy automatically on push to main branch.
+
+### Other Platforms
+
+Build the app with `npm run build` and serve the `.next` folder.
+
+## Contributing
+
+1. Fork the repo.
+2. Create a feature branch.
+3. Make changes, ensure `npm run lint` and `npm run type-check` pass.
+4. Run `npm run format` to format code.
+5. Submit a PR.
 
 ## Routes
 

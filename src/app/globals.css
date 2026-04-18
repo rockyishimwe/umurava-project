@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
 
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 :root {
   --primary: #0f172a;
   --accent: #10b981;
@@ -13,6 +21,11 @@
   --border: #e2e8f0;
   --text-primary: #0f172a;
   --text-muted: #64748b;
+  --sidebar: #ffffff;
+  --sidebar-accent: #f1f5f9;
+  --sidebar-border: #e2e8f0;
+  --sidebar-text: #0f172a;
+  --sidebar-text-muted: #64748b;
   --font-jetbrains: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', 'Source Code Pro', 'Droid Sans Mono', 'DejaVu Sans Mono', monospace;
 }
 
@@ -28,6 +41,11 @@
   --border: #334155;
   --text-primary: #f1f5f9;
   --text-muted: #94a3b8;
+  --sidebar: #1e293b;
+  --sidebar-accent: #334155;
+  --sidebar-border: #475569;
+  --sidebar-text: #f1f5f9;
+  --sidebar-text-muted: #94a3b8;
 }
 
 @theme inline {

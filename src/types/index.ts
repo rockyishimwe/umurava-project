@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export type JobStatus = "Draft" | "Active" | "Screening" | "Complete";
 
 export interface Trend {
@@ -81,4 +83,18 @@ export interface UiState {
   sidebarCollapsed: boolean;
   isGlobalLoading: boolean;
 }
+
+// Zod schemas for runtime validation
+export const trendSchema = z.object({
+  label: z.string(),
+  value: z.string(),
+  direction: z.enum(["up", "down", "neutral"]),
+});
+
+export const dashboardStatsSchema = z.object({
+  activeJobs: z.object({ value: z.number(), trend: trendSchema }),
+  totalApplicants: z.object({ value: z.number(), trend: trendSchema }),
+  shortlisted: z.object({ value: z.number(), trend: trendSchema, conversionRatePct: z.number() }),
+  inScreening: z.object({ value: z.number(), trend: trendSchema, avgTimePerCandidateMins: z.number() }),
+});
 
