@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
+    "type-check:backend": "cmd /c npm --prefix backend-reference run type-check",
     "format": "prettier --write .",
     "test": "jest",
     "test:watch": "jest --watch",

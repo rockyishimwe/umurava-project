@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import { MessageSquare, Send, X, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
@@ -38,6 +39,7 @@ function cannedAnswer(input: string) {
 }
 
 export function ChatBotWidget() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
@@ -50,6 +52,12 @@ export function ChatBotWidget() {
   ]);
 
   const canSend = input.trim().length > 0;
+  const hideWidget =
+    pathname?.startsWith("/dashboard/screening") ||
+    pathname?.startsWith("/screening/") ||
+    pathname === "/dashboard/jobs/new" ||
+    pathname === "/jobs/new";
+  const floatingOffset = pathname?.startsWith("/dashboard") ? "bottom-20 md:bottom-5" : "bottom-5";
 
   const sorted = useMemo(() => [...messages].sort((a, b) => a.ts - b.ts), [messages]);
 
@@ -67,10 +75,17 @@ export function ChatBotWidget() {
     }, 450);
   }
 
+  if (hideWidget) {
+    return null;
+  }
+
   return (
     <>
       <button
-        className="fixed bottom-5 right-5 z-40 inline-flex h-12 w-12 items-center justify-center rounded-full bg-accent text-white shadow-modal hover:bg-accent-hover"
+        className={cn(
+          "fixed right-5 z-40 inline-flex h-12 w-12 items-center justify-center rounded-full bg-accent text-white shadow-modal hover:bg-accent-hover",
+          floatingOffset,
+        )}
         onClick={() => setOpen(true)}
         aria-label="Open chatbot"
       >
@@ -105,7 +120,7 @@ export function ChatBotWidget() {
                   </div>
                   <div>
                     <div className="text-sm font-semibold">RankWise Copilot</div>
-                    <div className="text-xs text-text-muted">Mock assistant for demo</div>
+                    <div className="text-xs text-text-muted">Assistant for recruiter workflows</div>
                   </div>
                 </div>
                 <button
@@ -171,4 +186,3 @@ export function ChatBotWidget() {
     </>
   );
 }
-

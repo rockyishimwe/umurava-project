@@ -3,8 +3,12 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Search, Bell, Moon, Sun, Globe, Plus } from "lucide-react";
+import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
+import { logoutUser } from "@/lib/api";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { initials } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
 
 const initialNotifications = [
@@ -33,6 +37,7 @@ const initialNotifications = [
 
 export function DashboardHeader() {
   const { theme, toggleTheme } = useTheme();
+  const { data: currentUser } = useCurrentUser();
   const [notifications, setNotifications] = useState(initialNotifications);
   const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -58,6 +63,16 @@ export function DashboardHeader() {
     setNotifications((current) => current.map((notification) => ({ ...notification, read: true })));
   };
 
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      toast.success("Signed out successfully");
+      window.location.href = ROUTES.login;
+    } catch (error) {
+      toast.error("Unable to fully clear the session right now.");
+    }
+  };
+
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 px-4 sm:px-6">
       <div className="flex items-center gap-4">
@@ -73,6 +88,9 @@ export function DashboardHeader() {
       </div>
 
       <div className="flex items-center gap-3">
+        <div className="hidden rounded-badge border border-border bg-bg px-3 py-1 text-[11px] font-semibold text-text-muted xl:inline-flex">
+          Live recruiter workspace
+        </div>
         <Link href={ROUTES.newJob}>
           <Button size="sm" className="gap-2 shadow-sm">
             <Plus className="h-4 w-4" />
@@ -154,8 +172,25 @@ export function DashboardHeader() {
           )}
         </div>
 
+        <div className="hidden text-right lg:block">
+          <div className="text-sm font-semibold text-text-primary">
+            {currentUser?.name || "Recruiter Workspace"}
+          </div>
+          <div className="text-xs text-text-muted">
+            {currentUser?.email || "Sign in to sync your workspace"}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="hidden rounded-input border border-border px-3 py-2 text-xs font-semibold text-text-muted transition-colors hover:bg-bg hover:text-text-primary lg:inline-flex"
+        >
+          Sign out
+        </button>
+
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-sm font-bold text-accent ring-2 ring-accent/20">
-          AR
+          {initials(currentUser?.name || "RankWise")}
         </div>
       </div>
     </header>

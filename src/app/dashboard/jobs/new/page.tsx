@@ -3,42 +3,99 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
+import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { createJob, getApiErrorMessage } from "@/lib/api";
 import type { Job } from "@/types";
 
 type Step = 1 | 2 | 3 | 4;
 
+function buildJobCriteria(form: Job) {
+  const criteria = [
+    form.aiCriteria.mustHaveSkills.trim() || form.qualifications.trim()
+      ? {
+          criteria_string: form.aiCriteria.mustHaveSkills.trim() || "Core requirements",
+          description: form.qualifications.trim() || form.description.trim(),
+          priority: "high",
+        }
+      : null,
+    form.aiCriteria.niceToHaveSkills.trim() || form.responsibilities.trim()
+      ? {
+          criteria_string: form.aiCriteria.niceToHaveSkills.trim() || "Nice to have",
+          description: form.responsibilities.trim() || form.description.trim(),
+          priority: "medium",
+        }
+      : null,
+    form.aiCriteria.screeningQuestions.trim()
+      ? {
+          criteria_string: "Screening questions",
+          description: form.aiCriteria.screeningQuestions.trim(),
+          priority: "medium",
+        }
+      : null,
+    form.aiCriteria.dealBreakers.trim()
+      ? {
+          criteria_string: "Deal breakers",
+          description: form.aiCriteria.dealBreakers.trim(),
+          priority: "high",
+        }
+      : null,
+  ].filter(
+    (
+      criterion,
+    ): criterion is {
+      criteria_string: string;
+      description: string;
+      priority: string;
+    } => Boolean(criterion),
+  );
+
+  return criteria.length > 0
+    ? criteria
+    : [
+        {
+          criteria_string: "Core requirements",
+          description: form.description.trim() || form.qualifications.trim(),
+          priority: "high",
+        },
+      ];
+}
+
 function Stepper({ step }: { step: Step }) {
   const steps: Array<{ n: Step; label: string }> = [
     { n: 1, label: "Basic Info" },
-    { n: 2, label: "Job Description" },
+    { n: 2, label: "Job Brief" },
     { n: 3, label: "AI Criteria" },
-    { n: 4, label: "Review & Launch" },
+    { n: 4, label: "Review" },
   ];
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      {steps.map((s) => {
-        const active = s.n === step;
-        const done = s.n < step;
+      {steps.map((item) => {
+        const active = item.n === step;
+        const done = item.n < step;
+
         return (
-          <div key={s.n} className="flex items-center gap-3">
+          <div key={item.n} className="flex items-center gap-3">
             <div
               className={[
                 "flex h-8 w-8 items-center justify-center rounded-full border text-sm font-bold",
-                done ? "border-accent bg-accent text-white" : active ? "border-accent text-accent" : "border-border text-text-muted",
+                done
+                  ? "border-accent bg-accent text-white"
+                  : active
+                    ? "border-accent text-accent"
+                    : "border-border text-text-muted",
               ].join(" ")}
             >
-              {s.n}
+              {item.n}
             </div>
             <div className={active ? "text-sm font-semibold text-text-primary" : "text-sm text-text-muted"}>
-              {s.label}
+              {item.label}
             </div>
-            {s.n !== 4 ? <div className="h-px w-10 bg-border" /> : null}
+            {item.n !== 4 ? <div className="h-px w-10 bg-border" /> : null}
           </div>
         );
       })}
@@ -46,7 +103,84 @@ function Stepper({ step }: { step: Step }) {
   );
 }
 
+const stepGuidance: Record<Step, { title: string; body: string; example: string }> = {
+  1: {
+    title: "Make the role easy to recognize",
+    body: "Use the exact title, team, and location recruiters and hiring managers will use in real conversations.",
+    example: "Example: Senior Product Designer / Product / Nairobi (Hybrid)",
+  },
+  2: {
+    title: "Write for recruiter judgment",
+    body: "Describe what success looks like, what this person owns, and what evidence strong applicants should bring.",
+    example:
+      "Example: Own the recruiter workflow from intake to shortlist while improving speed, clarity, and confidence.",
+  },
+  3: {
+    title: "Teach the model your hiring standard",
+    body: "Separate non-negotiables from nice-to-haves so screening stays consistent and easier to explain later.",
+    example:
+      "Example: Must-have: React, TypeScript, design systems. Nice-to-have: accessibility audits and analytics instrumentation.",
+  },
+  4: {
+    title: "Launch what you can defend",
+    body: "This brief becomes the working context for sourcing and review, so read it like a hiring manager before launch.",
+    example: "After launch: recruiters can intake candidates immediately and the dashboard will pick up the new role.",
+  },
+};
+
+function SummaryPanel({
+  step,
+  summary,
+}: {
+  step: Step;
+  summary: Array<{ k: string; v: string }>;
+}) {
+  return (
+    <div className="space-y-6">
+      <Card className="xl:sticky xl:top-24">
+        <CardHeader title="Live Brief" subtitle="A recruiter-facing snapshot of the role as you build it." />
+        <CardBody className="space-y-3">
+          {summary.map((row) => (
+            <div key={row.k} className="rounded-card border border-border bg-bg p-3">
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">{row.k}</div>
+              <div className="mt-1 text-sm font-medium text-text-primary">{row.v}</div>
+            </div>
+          ))}
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader title={stepGuidance[step].title} subtitle="A small prompt to keep the brief intentional." />
+        <CardBody>
+          <p className="text-sm leading-relaxed text-text-muted">{stepGuidance[step].body}</p>
+          <div className="mt-4 rounded-card border border-accent/20 bg-accent/8 p-3 text-sm text-text-primary">
+            {stepGuidance[step].example}
+          </div>
+        </CardBody>
+      </Card>
+    </div>
+  );
+}
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) {
+    return null;
+  }
+
+  return <p className="mt-1.5 text-xs font-medium text-danger">{message}</p>;
+}
+
+function InputClass(hasError?: boolean) {
+  return [
+    "mt-2 w-full rounded-input border bg-white px-3 text-sm outline-none transition-all focus:ring-2",
+    hasError
+      ? "border-danger focus:border-danger focus:ring-danger/20"
+      : "border-border focus:border-accent/40 focus:ring-accent/20",
+  ].join(" ");
+}
+
 export default function NewJobPage() {
+  const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [form, setForm] = useState<Job>(() => ({
     id: "job_new",
@@ -72,138 +206,192 @@ export default function NewJobPage() {
     shortlistedCount: 0,
     updatedAtISO: new Date().toISOString(),
   }));
-
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [submitting, setSubmitting] = useState(false);
 
   const summary = useMemo(
     () => [
-      { k: "Job Title", v: form.title || "—" },
-      { k: "Department", v: form.department || "—" },
-      { k: "Location", v: form.location || "—" },
-      { k: "Employment", v: `${form.employmentType} • ${form.experienceLevel}` },
+      { k: "Job Title", v: form.title || "Not set yet" },
+      { k: "Department", v: form.department || "Not set yet" },
+      { k: "Location", v: form.location || "Not set yet" },
+      { k: "Employment", v: `${form.employmentType} / ${form.experienceLevel}` },
       {
         k: "Salary Range",
-        v: form.salaryMin || form.salaryMax ? `${form.salaryMin ?? "—"} - ${form.salaryMax ?? "—"}` : "—",
+        v:
+          form.salaryMin || form.salaryMax
+            ? `${form.salaryMin ?? "Open"} - ${form.salaryMax ?? "Open"}`
+            : "Not specified",
       },
-      { k: "Description", v: form.description ? `${form.description.slice(0, 120)}${form.description.length > 120 ? "…" : ""}` : "—" },
-      { k: "Must-Have Skills", v: form.aiCriteria.mustHaveSkills || "—" },
-      { k: "Nice-to-Have", v: form.aiCriteria.niceToHaveSkills || "—" },
+      {
+        k: "Description",
+        v: form.description
+          ? `${form.description.slice(0, 120)}${form.description.length > 120 ? "..." : ""}`
+          : "Add a short role narrative",
+      },
+      { k: "Must-Have Skills", v: form.aiCriteria.mustHaveSkills || "Still to define" },
+      { k: "Nice-to-Have", v: form.aiCriteria.niceToHaveSkills || "Still to define" },
       { k: "Shortlist Size", v: `Top ${form.aiCriteria.shortlistSize}` },
     ],
     [form],
   );
 
+  const launchChecks = useMemo(
+    () => [
+      { label: "Role basics captured", done: Boolean(form.title && form.department && form.location) },
+      { label: "Job brief written", done: Boolean(form.description && form.responsibilities && form.qualifications) },
+      { label: "Must-have screening criteria defined", done: Boolean(form.aiCriteria.mustHaveSkills.trim()) },
+      { label: "Shortlist size selected", done: Boolean(form.aiCriteria.shortlistSize) },
+    ],
+    [form],
+  );
+
   function validateStep1() {
-    const newErrors: Record<string, string> = {};
-    
+    const nextErrors: Record<string, string> = {};
+
     if (!form.title.trim()) {
-      newErrors.title = "Job title is required";
+      nextErrors.title = "Job title is required";
     } else if (form.title.trim().length < 3) {
-      newErrors.title = "Job title must be at least 3 characters";
+      nextErrors.title = "Job title must be at least 3 characters";
     }
 
     if (!form.department.trim()) {
-      newErrors.department = "Department is required";
+      nextErrors.department = "Department is required";
     } else if (form.department.trim().length < 2) {
-      newErrors.department = "Department must be at least 2 characters";
+      nextErrors.department = "Department must be at least 2 characters";
     }
 
     if (!form.location.trim()) {
-      newErrors.location = "Location is required";
+      nextErrors.location = "Location is required";
     } else if (form.location.trim().length < 2) {
-      newErrors.location = "Location must be at least 2 characters";
+      nextErrors.location = "Location must be at least 2 characters";
     }
 
-    if (form.salaryMin && form.salaryMin < 0) {
-      newErrors.salaryMin = "Salary must be a positive number";
+    if (form.salaryMin !== undefined && form.salaryMin < 0) {
+      nextErrors.salaryMin = "Salary must be a positive number";
     }
 
-    if (form.salaryMax && form.salaryMax < 0) {
-      newErrors.salaryMax = "Salary must be a positive number";
+    if (form.salaryMax !== undefined && form.salaryMax < 0) {
+      nextErrors.salaryMax = "Salary must be a positive number";
     }
 
-    if (form.salaryMin && form.salaryMax && form.salaryMin > form.salaryMax) {
-      newErrors.salaryRange = "Minimum salary cannot exceed maximum salary";
+    if (
+      form.salaryMin !== undefined &&
+      form.salaryMax !== undefined &&
+      form.salaryMin > form.salaryMax
+    ) {
+      nextErrors.salaryRange = "Minimum salary cannot exceed maximum salary";
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   }
 
   function validateStep2() {
-    const newErrors: Record<string, string> = {};
+    const nextErrors: Record<string, string> = {};
 
     if (!form.description.trim()) {
-      newErrors.description = "Description is required";
+      nextErrors.description = "Description is required";
     } else if (form.description.trim().length < 20) {
-      newErrors.description = "Description must be at least 20 characters";
+      nextErrors.description = "Description must be at least 20 characters";
     }
 
     if (!form.responsibilities.trim()) {
-      newErrors.responsibilities = "Responsibilities are required";
+      nextErrors.responsibilities = "Responsibilities are required";
     } else if (form.responsibilities.trim().length < 20) {
-      newErrors.responsibilities = "Responsibilities must be at least 20 characters";
+      nextErrors.responsibilities = "Responsibilities must be at least 20 characters";
     }
 
     if (!form.qualifications.trim()) {
-      newErrors.qualifications = "Qualifications are required";
+      nextErrors.qualifications = "Qualifications are required";
     } else if (form.qualifications.trim().length < 20) {
-      newErrors.qualifications = "Qualifications must be at least 20 characters";
+      nextErrors.qualifications = "Qualifications must be at least 20 characters";
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   }
 
   function validateStep3() {
-    const newErrors: Record<string, string> = {};
+    const nextErrors: Record<string, string> = {};
 
     if (!form.aiCriteria.mustHaveSkills.trim()) {
-      newErrors.mustHaveSkills = "Must-have skills are required for screening";
+      nextErrors.mustHaveSkills = "Must-have skills are required for screening";
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   }
 
   function next() {
-    let isValid = false;
+    if (step === 1 && !validateStep1()) {
+      toast.error("Please fix the highlighted basics before proceeding.");
+      return;
+    }
 
-    if (step === 1) {
-      isValid = validateStep1();
-      if (!isValid) {
-        toast.error("Please fix the errors before proceeding");
-        return;
-      }
-    } else if (step === 2) {
-      isValid = validateStep2();
-      if (!isValid) {
-        toast.error("Please fill in all details before proceeding");
-        return;
-      }
-    } else if (step === 3) {
-      isValid = validateStep3();
-      if (!isValid) {
-        toast.error("Please define AI criteria to proceed");
-        return;
-      }
+    if (step === 2 && !validateStep2()) {
+      toast.error("Please complete the role brief before proceeding.");
+      return;
+    }
+
+    if (step === 3 && !validateStep3()) {
+      toast.error("Please define the must-have criteria before proceeding.");
+      return;
     }
 
     setErrors({});
-    setTouched({});
-    setStep((s) => (s < 4 ? ((s + 1) as Step) : s));
+    setStep((current) => (current < 4 ? ((current + 1) as Step) : current));
   }
 
   function back() {
     setErrors({});
-    setTouched({});
-    setStep((s) => (s > 1 ? ((s - 1) as Step) : s));
+    setStep((current) => (current > 1 ? ((current - 1) as Step) : current));
+  }
+
+  async function handleCreateJob() {
+    setSubmitting(true);
+
+    try {
+      const response = await createJob({
+        reqBody: {
+          job_title: form.title.trim(),
+          job_department: form.department.trim(),
+          job_location: form.location.trim(),
+          job_employment_type: form.employmentType,
+          job_salary_min: form.salaryMin,
+          job_salary_max: form.salaryMax,
+          job_experience_required: form.experienceLevel,
+          job_description: form.description.trim(),
+          job_responsibilities: form.responsibilities.trim(),
+          job_qualifications: form.qualifications.trim(),
+          job_shortlist_size: form.aiCriteria.shortlistSize,
+          job_ai_criteria: buildJobCriteria(form),
+          workers_required: 1,
+          job_state: "Active",
+        },
+      });
+
+      const createdJobId = response.job?.id;
+      toast.success("Job created and launched successfully.");
+
+      if (createdJobId) {
+        router.push(`/dashboard/jobs/${createdJobId}`);
+        return;
+      }
+
+      router.push("/dashboard");
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Unable to create this job right now."));
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
-      <PageHeader title="Create New Job" subtitle="A multi-step flow to launch AI screening-ready roles." />
+      <PageHeader
+        title="Create New Job"
+        subtitle="Shape the role clearly now so sourcing and screening stay faster and easier to defend later."
+      />
 
       <div className="mt-8">
         <Card className="p-5">
@@ -211,302 +399,377 @@ export default function NewJobPage() {
         </Card>
       </div>
 
-      <div className="mt-8">
-        {step === 1 ? (
-          <Card>
-            <CardHeader title="Step 1 — Basic Information" subtitle="Define the role and logistics." />
-            <CardBody>
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="text-sm font-semibold">Job Title</label>
-                  <input
-                    value={form.title}
-                    onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                    className="mt-2 h-10 w-full rounded-input border border-border bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-accent/30"
-                    placeholder="Senior Full Stack Engineer"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div>
+          {step === 1 ? (
+            <Card>
+              <CardHeader title="Step 1 - Basic Information" subtitle="Define the role, team, and hiring logistics." />
+              <CardBody>
+                <div className="grid grid-cols-1 gap-4">
                   <div>
-                    <label className="text-sm font-semibold">Department</label>
+                    <label className="text-sm font-semibold text-text-primary">Job Title</label>
                     <input
-                      value={form.department}
-                      onChange={(e) => setForm((f) => ({ ...f, department: e.target.value }))}
-                      className="mt-2 h-10 w-full rounded-input border border-border bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-accent/30"
-                      placeholder="Engineering"
+                      value={form.title}
+                      onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
+                      className={`${InputClass(Boolean(errors.title))} h-10`}
+                      placeholder="Senior Full Stack Engineer"
                     />
+                    <div className="mt-1 text-xs text-text-muted">
+                      Use the hiring title candidates and recruiters will recognize instantly.
+                    </div>
+                    <FieldError message={errors.title} />
                   </div>
-                  <div>
-                    <label className="text-sm font-semibold">Location</label>
-                    <input
-                      value={form.location}
-                      onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
-                      className="mt-2 h-10 w-full rounded-input border border-border bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-accent/30"
-                      placeholder="Kigali (Hybrid)"
-                    />
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="text-sm font-semibold text-text-primary">Department</label>
+                      <input
+                        value={form.department}
+                        onChange={(event) =>
+                          setForm((current) => ({ ...current, department: event.target.value }))
+                        }
+                        className={`${InputClass(Boolean(errors.department))} h-10`}
+                        placeholder="Engineering"
+                      />
+                      <FieldError message={errors.department} />
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-text-primary">Location</label>
+                      <input
+                        value={form.location}
+                        onChange={(event) => setForm((current) => ({ ...current, location: event.target.value }))}
+                        className={`${InputClass(Boolean(errors.location))} h-10`}
+                        placeholder="Kigali (Hybrid)"
+                      />
+                      <FieldError message={errors.location} />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="text-sm font-semibold text-text-primary">Employment Type</label>
+                      <select
+                        value={form.employmentType}
+                        onChange={(event) =>
+                          setForm((current) => ({ ...current, employmentType: event.target.value }))
+                        }
+                        className={`${InputClass()} h-10`}
+                      >
+                        <option>Full-time</option>
+                        <option>Part-time</option>
+                        <option>Contract</option>
+                        <option>Internship</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-text-primary">Experience Level</label>
+                      <select
+                        value={form.experienceLevel}
+                        onChange={(event) =>
+                          setForm((current) => ({ ...current, experienceLevel: event.target.value }))
+                        }
+                        className={`${InputClass()} h-10`}
+                      >
+                        <option>Junior</option>
+                        <option>Mid</option>
+                        <option>Senior</option>
+                        <option>Lead</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="text-sm font-semibold text-text-primary">Salary Min (optional)</label>
+                      <input
+                        value={form.salaryMin ?? ""}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            salaryMin: event.target.value ? Number(event.target.value) : undefined,
+                          }))
+                        }
+                        type="number"
+                        className={`${InputClass(Boolean(errors.salaryMin || errors.salaryRange))} h-10`}
+                        placeholder="45000"
+                      />
+                      <FieldError message={errors.salaryMin || errors.salaryRange} />
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-text-primary">Salary Max (optional)</label>
+                      <input
+                        value={form.salaryMax ?? ""}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            salaryMax: event.target.value ? Number(event.target.value) : undefined,
+                          }))
+                        }
+                        type="number"
+                        className={`${InputClass(Boolean(errors.salaryMax || errors.salaryRange))} h-10`}
+                        placeholder="70000"
+                      />
+                      <FieldError message={errors.salaryMax || errors.salaryRange} />
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="text-sm font-semibold">Employment Type</label>
-                    <select
-                      value={form.employmentType}
-                      onChange={(e) => setForm((f) => ({ ...f, employmentType: e.target.value }))}
-                      className="mt-2 h-10 w-full rounded-input border border-border bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-accent/30"
-                    >
-                      <option>Full-time</option>
-                      <option>Part-time</option>
-                      <option>Contract</option>
-                      <option>Internship</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-semibold">Experience Level</label>
-                    <select
-                      value={form.experienceLevel}
-                      onChange={(e) => setForm((f) => ({ ...f, experienceLevel: e.target.value }))}
-                      className="mt-2 h-10 w-full rounded-input border border-border bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-accent/30"
-                    >
-                      <option>Junior</option>
-                      <option>Mid</option>
-                      <option>Senior</option>
-                      <option>Lead</option>
-                    </select>
-                  </div>
+                <div className="mt-6 flex items-center justify-between">
+                  <Button variant="outline" disabled>
+                    Back
+                  </Button>
+                  <Button onClick={next}>Next</Button>
                 </div>
+              </CardBody>
+            </Card>
+          ) : null}
 
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {step === 2 ? (
+            <Card>
+              <CardHeader
+                title="Step 2 - Job Brief"
+                subtitle="Write the role narrative recruiters and candidates will rely on."
+              />
+              <CardBody>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="rounded-card border border-border bg-bg p-4 text-sm text-text-muted">
+                    A strong brief explains the mission, ownership, and evidence of fit. This helps both recruiters
+                    and later AI screening stay grounded in the same expectations.
+                  </div>
+
                   <div>
-                    <label className="text-sm font-semibold">Salary Min (optional)</label>
-                    <input
-                      value={form.salaryMin ?? ""}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, salaryMin: e.target.value ? Number(e.target.value) : undefined }))
+                    <label className="text-sm font-semibold text-text-primary">Description</label>
+                    <textarea
+                      value={form.description}
+                      onChange={(event) =>
+                        setForm((current) => ({ ...current, description: event.target.value }))
                       }
-                      type="number"
-                      className="mt-2 h-10 w-full rounded-input border border-border bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-accent/30"
-                      placeholder="45000"
+                      className={`${InputClass(Boolean(errors.description))} min-h-[120px] py-2`}
+                      placeholder="Describe the mission, business impact, and why this role matters now."
                     />
+                    <div className="mt-1 text-xs text-text-muted">{form.description.length} characters</div>
+                    <FieldError message={errors.description} />
                   </div>
                   <div>
-                    <label className="text-sm font-semibold">Salary Max (optional)</label>
-                    <input
-                      value={form.salaryMax ?? ""}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, salaryMax: e.target.value ? Number(e.target.value) : undefined }))
+                    <label className="text-sm font-semibold text-text-primary">Responsibilities</label>
+                    <textarea
+                      value={form.responsibilities}
+                      onChange={(event) =>
+                        setForm((current) => ({ ...current, responsibilities: event.target.value }))
                       }
-                      type="number"
-                      className="mt-2 h-10 w-full rounded-input border border-border bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-accent/30"
-                      placeholder="70000"
+                      className={`${InputClass(Boolean(errors.responsibilities))} min-h-[110px] py-2`}
+                      placeholder="What will this person own day to day, and what outcomes matter most?"
                     />
+                    <FieldError message={errors.responsibilities} />
                   </div>
-                </div>
-              </div>
-
-              <div className="mt-6 flex items-center justify-between">
-                <Button variant="outline" disabled>
-                  Back
-                </Button>
-                <Button onClick={next}>Next</Button>
-              </div>
-            </CardBody>
-          </Card>
-        ) : null}
-
-        {step === 2 ? (
-          <Card>
-            <CardHeader title="Step 2 — Job Description" subtitle="Write the role narrative candidates will see." />
-            <CardBody>
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="text-sm font-semibold">Description</label>
-                  <textarea
-                    value={form.description}
-                    onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                    className="mt-2 min-h-[120px] w-full rounded-input border border-border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/30"
-                    placeholder="Describe the mission, impact, and scope…"
-                  />
-                  <div className="mt-1 text-xs text-text-muted">{form.description.length} characters</div>
-                </div>
-                <div>
-                  <label className="text-sm font-semibold">Responsibilities</label>
-                  <textarea
-                    value={form.responsibilities}
-                    onChange={(e) => setForm((f) => ({ ...f, responsibilities: e.target.value }))}
-                    className="mt-2 min-h-[110px] w-full rounded-input border border-border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/30"
-                    placeholder="What will they own day-to-day?"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-semibold">Qualifications</label>
-                  <textarea
-                    value={form.qualifications}
-                    onChange={(e) => setForm((f) => ({ ...f, qualifications: e.target.value }))}
-                    className="mt-2 min-h-[110px] w-full rounded-input border border-border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/30"
-                    placeholder="Must-have experience, mindset, and skills…"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 flex items-center justify-between">
-                <Button variant="outline" onClick={back}>
-                  Back
-                </Button>
-                <Button onClick={next}>Next</Button>
-              </div>
-            </CardBody>
-          </Card>
-        ) : null}
-
-        {step === 3 ? (
-          <Card className="overflow-hidden">
-            <div className="bg-accent/8 p-5">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-accent" />
-                <div className="text-base font-semibold">AI Screening Criteria</div>
-              </div>
-              <div className="mt-1 text-sm text-text-muted">
-                Define what "great" means so the model can score consistently.
-              </div>
-            </div>
-            <CardBody>
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="text-sm font-semibold">Must-Have Skills</label>
-                  <textarea
-                    value={form.aiCriteria.mustHaveSkills}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, aiCriteria: { ...f.aiCriteria, mustHaveSkills: e.target.value } }))
-                    }
-                    className="mt-2 min-h-[90px] w-full rounded-input border border-border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/30"
-                    placeholder="TypeScript, React, Node.js, SQL…"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-semibold">Nice-to-Have Skills</label>
-                  <textarea
-                    value={form.aiCriteria.niceToHaveSkills}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, aiCriteria: { ...f.aiCriteria, niceToHaveSkills: e.target.value } }))
-                    }
-                    className="mt-2 min-h-[90px] w-full rounded-input border border-border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/30"
-                    placeholder="Next.js, AWS, Docker…"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-semibold">Screening Questions</label>
-                  <textarea
-                    value={form.aiCriteria.screeningQuestions}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, aiCriteria: { ...f.aiCriteria, screeningQuestions: e.target.value } }))
-                    }
-                    className="mt-2 min-h-[90px] w-full rounded-input border border-border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/30"
-                    placeholder="Ask 2–4 questions that reveal depth…"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-semibold">Deal Breakers</label>
-                  <textarea
-                    value={form.aiCriteria.dealBreakers}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, aiCriteria: { ...f.aiCriteria, dealBreakers: e.target.value } }))
-                    }
-                    className="mt-2 min-h-[90px] w-full rounded-input border border-border bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/30"
-                    placeholder="Hard constraints / disqualifiers…"
-                  />
-                  <div className="mt-1 text-xs text-warning">
-                    Tip: Keep deal breakers explicit to avoid false positives.
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-bg p-4">
                   <div>
-                    <div className="text-sm font-semibold">Shortlist Size</div>
-                    <div className="text-xs text-text-muted">How many top candidates to return.</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      className={[
-                        "rounded-badge border px-3 py-1 text-sm font-semibold",
-                        form.aiCriteria.shortlistSize === 10 ? "border-accent bg-accent/10 text-accent" : "border-border bg-white text-text-muted",
-                      ].join(" ")}
-                      onClick={() => setForm((f) => ({ ...f, aiCriteria: { ...f.aiCriteria, shortlistSize: 10 } }))}
-                      type="button"
-                    >
-                      Top 10
-                    </button>
-                    <button
-                      className={[
-                        "rounded-badge border px-3 py-1 text-sm font-semibold",
-                        form.aiCriteria.shortlistSize === 20 ? "border-accent bg-accent/10 text-accent" : "border-border bg-white text-text-muted",
-                      ].join(" ")}
-                      onClick={() => setForm((f) => ({ ...f, aiCriteria: { ...f.aiCriteria, shortlistSize: 20 } }))}
-                      type="button"
-                    >
-                      Top 20
-                    </button>
+                    <label className="text-sm font-semibold text-text-primary">Qualifications</label>
+                    <textarea
+                      value={form.qualifications}
+                      onChange={(event) =>
+                        setForm((current) => ({ ...current, qualifications: event.target.value }))
+                      }
+                      className={`${InputClass(Boolean(errors.qualifications))} min-h-[110px] py-2`}
+                      placeholder="Capture the experience, mindset, and capability signals that matter most."
+                    />
+                    <FieldError message={errors.qualifications} />
                   </div>
                 </div>
-              </div>
 
-              <div className="mt-6 flex items-center justify-between">
-                <Button variant="outline" onClick={back}>
-                  Back
-                </Button>
-                <Button onClick={next}>Next</Button>
-              </div>
-            </CardBody>
-          </Card>
-        ) : null}
-
-        {step === 4 ? (
-          <Card>
-            <CardHeader title="Step 4 — Review & Launch" subtitle="Double-check details before ingestion." />
-            <CardBody>
-              <div className="grid grid-cols-1 gap-3">
-                {summary.map((row) => (
-                  <div key={row.k} className="flex flex-col justify-between gap-1 rounded-card border border-border bg-bg p-4 md:flex-row md:items-center">
-                    <div className="text-sm font-semibold text-text-primary">{row.k}</div>
-                    <div className="text-sm text-text-muted md:max-w-[70%] md:text-right">{row.v}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    toast.success("Saved as draft (mock).");
-                  }}
-                >
-                  Save as Draft
-                </Button>
-                <div className="flex items-center gap-3">
+                <div className="mt-6 flex items-center justify-between">
                   <Button variant="outline" onClick={back}>
                     Back
                   </Button>
-                  <Button
-                    onClick={() => {
-                      toast.success("Job created. Continue to ingestion (mock).");
-                      window.location.href = "/dashboard/screening/job_001";
-                    }}
-                  >
-                    Continue to Ingestion
-                  </Button>
+                  <Button onClick={next}>Next</Button>
+                </div>
+              </CardBody>
+            </Card>
+          ) : null}
+
+          {step === 3 ? (
+            <Card className="overflow-hidden">
+              <div className="bg-accent/8 p-5">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-accent" />
+                  <div className="text-base font-semibold text-text-primary">AI Screening Criteria</div>
+                </div>
+                <div className="mt-1 text-sm text-text-muted">
+                  Define what strong evidence looks like before the first candidate enters the funnel.
                 </div>
               </div>
+              <CardBody>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="text-sm font-semibold text-text-primary">Must-Have Skills</label>
+                    <textarea
+                      value={form.aiCriteria.mustHaveSkills}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          aiCriteria: { ...current.aiCriteria, mustHaveSkills: event.target.value },
+                        }))
+                      }
+                      className={`${InputClass(Boolean(errors.mustHaveSkills))} min-h-[90px] py-2`}
+                      placeholder="TypeScript, React, Node.js, SQL, stakeholder communication..."
+                    />
+                    <div className="mt-1 text-xs text-text-muted">
+                      These are the signals the shortlist should optimize for first.
+                    </div>
+                    <FieldError message={errors.mustHaveSkills} />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-text-primary">Nice-to-Have Skills</label>
+                    <textarea
+                      value={form.aiCriteria.niceToHaveSkills}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          aiCriteria: { ...current.aiCriteria, niceToHaveSkills: event.target.value },
+                        }))
+                      }
+                      className={`${InputClass()} min-h-[90px] py-2`}
+                      placeholder="Next.js, AWS, analytics instrumentation, mentoring..."
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-text-primary">Screening Questions</label>
+                    <textarea
+                      value={form.aiCriteria.screeningQuestions}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          aiCriteria: { ...current.aiCriteria, screeningQuestions: event.target.value },
+                        }))
+                      }
+                      className={`${InputClass()} min-h-[90px] py-2`}
+                      placeholder="Add 2-4 questions that reveal practical depth and ownership."
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-text-primary">Deal Breakers</label>
+                    <textarea
+                      value={form.aiCriteria.dealBreakers}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          aiCriteria: { ...current.aiCriteria, dealBreakers: event.target.value },
+                        }))
+                      }
+                      className={`${InputClass()} min-h-[90px] py-2`}
+                      placeholder="Hard constraints, unavailable locations, missing must-haves..."
+                    />
+                    <div className="mt-1 text-xs text-warning">
+                      Keep deal breakers explicit to reduce false positives later.
+                    </div>
+                  </div>
 
-              <div className="mt-4">
-                <Badge variant="info">Demo note</Badge>
-                <span className="ml-2 text-xs text-text-muted">
-                  This is a frontend-only flow backed by local mock data.
-                </span>
-              </div>
-            </CardBody>
-          </Card>
-        ) : null}
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-border bg-bg p-4">
+                    <div>
+                      <div className="text-sm font-semibold text-text-primary">Shortlist Size</div>
+                      <div className="text-xs text-text-muted">
+                        How many top candidates the recruiting team wants surfaced first.
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {[10, 20].map((size) => (
+                        <button
+                          key={size}
+                          className={[
+                            "rounded-badge border px-3 py-1 text-sm font-semibold",
+                            form.aiCriteria.shortlistSize === size
+                              ? "border-accent bg-accent/10 text-accent"
+                              : "border-border bg-white text-text-muted",
+                          ].join(" ")}
+                          onClick={() =>
+                            setForm((current) => ({
+                              ...current,
+                              aiCriteria: { ...current.aiCriteria, shortlistSize: size as 10 | 20 },
+                            }))
+                          }
+                          type="button"
+                        >
+                          Top {size}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex items-center justify-between">
+                  <Button variant="outline" onClick={back}>
+                    Back
+                  </Button>
+                  <Button onClick={next}>Next</Button>
+                </div>
+              </CardBody>
+            </Card>
+          ) : null}
+
+          {step === 4 ? (
+            <Card>
+              <CardHeader
+                title="Step 4 - Review and Launch"
+                subtitle="Double-check the brief before the role goes live in the workspace."
+              />
+              <CardBody>
+                <div className="grid grid-cols-1 gap-3">
+                  {summary.map((row) => (
+                    <div
+                      key={row.k}
+                      className="flex flex-col justify-between gap-1 rounded-card border border-border bg-bg p-4 md:flex-row md:items-center"
+                    >
+                      <div className="text-sm font-semibold text-text-primary">{row.k}</div>
+                      <div className="text-sm text-text-muted md:max-w-[70%] md:text-right">{row.v}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 rounded-card border border-border bg-bg p-4">
+                  <div className="text-sm font-semibold text-text-primary">Launch Checklist</div>
+                  <div className="mt-3 grid gap-2">
+                    {launchChecks.map((item) => (
+                      <div key={item.label} className="flex items-center justify-between gap-3 text-sm">
+                        <span className="text-text-primary">{item.label}</span>
+                        <span className={item.done ? "font-semibold text-success" : "font-semibold text-warning"}>
+                          {item.done ? "Ready" : "Missing"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      toast("Draft saving is not available in the current backend yet.", { icon: "i" });
+                    }}
+                  >
+                    Save as Draft
+                  </Button>
+                  <div className="flex items-center gap-3">
+                    <Button variant="outline" onClick={back}>
+                      Back
+                    </Button>
+                    <Button onClick={handleCreateJob} disabled={submitting}>
+                      {submitting ? "Launching..." : "Create and Launch Job"}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-4 rounded-card border border-accent/20 bg-accent/8 p-4">
+                  <div className="text-sm font-semibold text-text-primary">What happens next</div>
+                  <div className="mt-2 text-sm leading-relaxed text-text-muted">
+                    This role will be saved to the backend as an active job. Recruiters can then intake candidates,
+                    review the pipeline, and track the opening from the dashboard immediately.
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+          ) : null}
+        </div>
+
+        <SummaryPanel step={step} summary={summary} />
       </div>
     </motion.div>
   );

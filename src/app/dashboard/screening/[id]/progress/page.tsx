@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Brain } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { isMockMode } from "@/lib/api";
 
 const steps = ["Parsing Profiles", "Scoring Candidates", "Ranking Results", "Generating Explanations"] as const;
 
@@ -13,23 +15,52 @@ export default function ScreeningProgressPage() {
   const jobId = params?.id ?? "job_001";
   const totalSeconds = 5;
   const [elapsed, setElapsed] = useState(0);
+  const mockMode = isMockMode();
 
   useEffect(() => {
+    if (!mockMode) {
+      return;
+    }
+
     const t = window.setInterval(() => setElapsed((e) => e + 1), 1000);
     return () => window.clearInterval(t);
-  }, []);
+  }, [mockMode]);
 
   useEffect(() => {
+    if (!mockMode) {
+      return;
+    }
+
     if (elapsed >= totalSeconds) {
       window.location.href = `/dashboard/screening/${jobId}/results`;
     }
-  }, [elapsed, jobId]);
+  }, [elapsed, jobId, mockMode]);
 
   const pct = Math.min(100, Math.round((elapsed / totalSeconds) * 100));
   const activeStepIdx = Math.min(steps.length - 1, Math.floor((pct / 100) * steps.length));
   const remaining = Math.max(0, totalSeconds - elapsed);
 
   const subtitle = useMemo(() => `Reviewing 87 applicants against job criteria`, []);
+
+  if (!mockMode) {
+    return (
+      <div className="min-h-screen bg-linear-to-br from-primary to-accent text-white">
+        <div className="mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center px-6 py-16 text-center">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/10">
+            <Brain className="h-10 w-10" />
+          </div>
+          <h1 className="mt-6 text-3xl font-bold tracking-tight">Backend scoring is not connected yet</h1>
+          <p className="mt-3 max-w-2xl text-white/80">
+            Candidate intake is real now, but the backend does not expose a screening-run endpoint yet. Once that
+            route exists, this progress view can track a live analysis run instead of a simulated one.
+          </p>
+          <div className="mt-6">
+            <Button onClick={() => (window.location.href = `/dashboard/screening/${jobId}`)}>Back to Intake</Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-linear-to-br from-primary to-accent text-white">

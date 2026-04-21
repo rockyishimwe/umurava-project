@@ -6,6 +6,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/Button";
+import { getApiErrorMessage, loginUser } from "@/lib/api";
 import { ROUTES } from "@/lib/constants";
 
 const isValidEmail = (email: string) => {
@@ -23,61 +24,73 @@ export default function LoginPage() {
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
+
     if (!email.trim()) {
       newErrors.email = "Email is required";
     } else if (!isValidEmail(email)) {
       newErrors.email = "Please enter a valid email";
     }
+
     if (!password) {
       newErrors.password = "Password is required";
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
     }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleBlur = (field: "email" | "password") => {
-    setTouched(prev => ({ ...prev, [field]: true }));
+    setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
   const handleEmailChange = (value: string) => {
     setEmail(value);
-    if (touched.email) {
-      if (!value.trim()) {
-        setErrors(prev => ({ ...prev, email: "Email is required" }));
-      } else if (!isValidEmail(value)) {
-        setErrors(prev => ({ ...prev, email: "Please enter a valid email" }));
-      } else {
-        setErrors(prev => ({ ...prev, email: undefined }));
-      }
+    if (!touched.email) {
+      return;
+    }
+
+    if (!value.trim()) {
+      setErrors((prev) => ({ ...prev, email: "Email is required" }));
+    } else if (!isValidEmail(value)) {
+      setErrors((prev) => ({ ...prev, email: "Please enter a valid email" }));
+    } else {
+      setErrors((prev) => ({ ...prev, email: undefined }));
     }
   };
 
   const handlePasswordChange = (value: string) => {
     setPassword(value);
-    if (touched.password) {
-      if (!value) {
-        setErrors(prev => ({ ...prev, password: "Password is required" }));
-      } else if (value.length < 6) {
-        setErrors(prev => ({ ...prev, password: "Password must be at least 6 characters" }));
-      } else {
-        setErrors(prev => ({ ...prev, password: undefined }));
-      }
+    if (!touched.password) {
+      return;
+    }
+
+    if (!value) {
+      setErrors((prev) => ({ ...prev, password: "Password is required" }));
+    } else {
+      setErrors((prev) => ({ ...prev, password: undefined }));
     }
   };
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validateForm()) {
       return;
     }
+
     setBusy(true);
-    window.setTimeout(() => {
-      setBusy(false);
-      toast.success("Signed in (demo — no backend).");
+
+    try {
+      await loginUser({
+        user_email: email.trim(),
+        user_pass: password,
+      });
+      toast.success("Signed in successfully.");
       router.push(ROUTES.dashboard);
-    }, 600);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Unable to sign in right now."));
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -86,7 +99,7 @@ export default function LoginPage() {
       subtitle="Sign in to manage jobs, screening, and shortlists."
       footer={
         <>
-          Don’t have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link href={ROUTES.register} className="font-semibold text-accent hover:text-accent-hover">
             Create one
           </Link>
@@ -113,10 +126,11 @@ export default function LoginPage() {
             }`}
             placeholder="you@company.com"
           />
-          {errors.email && touched.email && (
+          {errors.email && touched.email ? (
             <p className="mt-1.5 text-xs font-medium text-danger">{errors.email}</p>
-          )}
+          ) : null}
         </div>
+
         <div>
           <div className="flex items-center justify-between gap-2">
             <label htmlFor="password" className="text-sm font-semibold text-text-primary">
@@ -125,7 +139,11 @@ export default function LoginPage() {
             <button
               type="button"
               className="text-xs font-semibold text-accent hover:text-accent-hover"
-              onClick={() => toast("Password reset is not wired in the demo.", { icon: "ℹ️" })}
+              onClick={() =>
+                toast("Password recovery exists in the backend, but this screen is not wired yet.", {
+                  icon: "i",
+                })
+              }
             >
               Forgot password?
             </button>
@@ -143,17 +161,19 @@ export default function LoginPage() {
                 ? "border-danger focus:border-danger focus:ring-danger/20"
                 : "border-border focus:border-accent/40 focus:ring-accent/20"
             }`}
-            placeholder="••••••••"
+            placeholder="Enter your password"
           />
-          {errors.password && touched.password && (
+          {errors.password && touched.password ? (
             <p className="mt-1.5 text-xs font-medium text-danger">{errors.password}</p>
-          )}
+          ) : null}
         </div>
-        <Button type="submit" className="h-11 w-full" disabled={busy || Object.keys(errors).length > 0}>
-          {busy ? "Signing in…" : "Sign in"}
+
+        <Button type="submit" className="h-11 w-full" disabled={busy}>
+          {busy ? "Signing in..." : "Sign in"}
         </Button>
+
         <p className="text-center text-xs text-text-muted">
-          Demo: Use any valid email and 6+ character password.
+          This screen now uses your backend `POST /auth/login` route.
         </p>
       </form>
     </AuthShell>

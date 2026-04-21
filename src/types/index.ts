@@ -42,6 +42,10 @@ export interface Candidate {
   yearsExperience: number;
   email?: string;
   linkedIn?: string;
+  shortlisted?: boolean;
+  appliedJobTitle?: string;
+  createdAtISO?: string;
+  updatedAtISO?: string;
   skills: {
     technical: string[];
     soft: string[];

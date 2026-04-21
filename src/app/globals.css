@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
 
 @media (prefers-reduced-motion: reduce) {
@@ -26,6 +27,7 @@
   --sidebar-border: #e2e8f0;
   --sidebar-text: #0f172a;
   --sidebar-text-muted: #64748b;
+  --font-sans: 'Manrope', 'Segoe UI', sans-serif;
   --font-jetbrains: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', 'Source Code Pro', 'Droid Sans Mono', 'DejaVu Sans Mono', monospace;
 }
 
@@ -60,17 +62,28 @@
   --color-border: var(--border);
   --color-text-primary: var(--text-primary);
   --color-text-muted: var(--text-muted);
+  --font-sans: var(--font-sans);
   --font-mono: var(--font-jetbrains);
 }
 
 body {
   background: var(--bg);
   color: var(--text-primary);
-  font-family: var(--font-jetbrains);
+  font-family: var(--font-sans);
+  line-height: 1.55;
 }
 
 * {
   border-color: var(--border);
+}
+
+h1, h2, h3, h4 {
+  letter-spacing: -0.03em;
+}
+
+label,
+thead th {
+  font-family: var(--font-jetbrains);
 }
 
 /* Custom scrollbar */

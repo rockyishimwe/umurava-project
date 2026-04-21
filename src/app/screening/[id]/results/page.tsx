@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/Badge";
 import { ScoreCircle } from "@/components/ui/ScoreCircle";
 import { SkillTag } from "@/components/ui/SkillTag";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { isMockMode } from "@/lib/api";
 import { SCORE_THRESHOLDS } from "@/lib/constants";
 import { initials } from "@/lib/utils";
 import { mockCandidateScores, mockCandidates, mockJobs } from "@/lib/mockData";
@@ -102,6 +103,7 @@ function CandidateCard({ c, s }: { c: Candidate; s: CandidateScore }) {
 export default function ResultsPage() {
   const params = useParams<{ id: string }>();
   const jobId = params?.id ?? "job_001";
+  const mockMode = isMockMode();
   const job = mockJobs.find((j) => j.id === jobId) ?? mockJobs[0];
 
   const [q, setQ] = useState("");
@@ -137,6 +139,33 @@ export default function ResultsPage() {
     const notQualified = all.filter((s) => s.score < SCORE_THRESHOLDS.maybeMin).length;
     return { total: all.length, qualified, maybe, notQualified };
   }, [job.id]);
+
+  if (!mockMode) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+        <PageHeader
+          title="Screening Results"
+          subtitle="This view will light up once the backend exposes scored screening results."
+          backHref={`/screening/${jobId}`}
+        />
+
+        <div className="mt-8">
+          <Card className="p-8">
+            <div className="text-lg font-semibold text-text-primary">Results endpoint not connected yet</div>
+            <div className="mt-2 text-sm leading-relaxed text-text-muted">
+              Candidate intake and profile pages now use real backend data. AI ranking, strengths, and shortlist
+              results will be wired here once the backend exposes a scored screening-results route.
+            </div>
+            <div className="mt-5">
+              <Link href={`/screening/${jobId}`}>
+                <Button>Back to Intake</Button>
+              </Link>
+            </div>
+          </Card>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
@@ -245,4 +274,3 @@ export default function ResultsPage() {
     </motion.div>
   );
 }
-

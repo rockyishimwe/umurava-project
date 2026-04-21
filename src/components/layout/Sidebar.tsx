@@ -4,15 +4,24 @@ import {
   Home,
   LayoutDashboard,
   Briefcase,
-  Sparkles,
-  Users,
   Settings,
   LogOut,
   Zap,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { logoutUser } from "@/lib/api";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
+
+const overview = [
+  { label: "Home", href: ROUTES.home, icon: Home },
+  { label: "Dashboard", href: ROUTES.dashboard, icon: LayoutDashboard },
+] as const;
+
+const pipeline = [
+  { label: "New Job", href: ROUTES.newJob, icon: Briefcase, prefixMatch: "/dashboard/jobs" },
+] as const;
 
 const system = [{ label: "Settings", href: "/dashboard/settings", icon: Settings }] as const;
 
@@ -25,7 +34,7 @@ function NavSection({
 }) {
   return (
     <div className="px-3 pt-6 first:pt-2">
-      <div className="px-3 text-[11px] font-semibold uppercase tracking-wider text-white/40">{title}</div>
+      <div className="px-3 font-mono text-[11px] font-semibold uppercase tracking-wider text-white/40">{title}</div>
       <ul className="mt-2 space-y-0.5">{children}</ul>
     </div>
   );
@@ -75,10 +84,17 @@ function NavLink({
 
 export function Sidebar({ pathname }: { pathname: string }) {
   const router = useRouter();
+  const { data: currentUser } = useCurrentUser();
 
-  const handleSignOut = () => {
-    toast.success("Signed out successfully");
-    router.push(ROUTES.login);
+  const handleSignOut = async () => {
+    try {
+      await logoutUser();
+      toast.success("Signed out successfully");
+    } catch (error) {
+      toast.error("Unable to fully clear the session, but you’ve been redirected.");
+    } finally {
+      router.push(ROUTES.login);
+    }
   };
 
   return (
@@ -94,26 +110,14 @@ export function Sidebar({ pathname }: { pathname: string }) {
 
       <nav className="flex-1 overflow-y-auto pb-0">
         <NavSection title="Overview">
-          <NavLink href={ROUTES.home} label="Home" icon={Home} pathname={pathname} />
-          <NavLink href={ROUTES.dashboard} label="Dashboard" icon={LayoutDashboard} pathname={pathname} />
+          {overview.map((item) => (
+            <NavLink key={item.href} {...item} pathname={pathname} />
+          ))}
         </NavSection>
         <NavSection title="Pipeline">
-          <NavLink href="/dashboard/jobs/new" label="Jobs" icon={Briefcase} pathname={pathname} prefixMatch="/dashboard/jobs" />
-          <NavLink
-            href="/dashboard/screening/job_001"
-            label="Screening"
-            icon={Sparkles}
-            pathname={pathname}
-            prefixMatch="/dashboard/screening"
-            badge={3}
-          />
-          <NavLink
-            href="/dashboard/candidates/cand_001"
-            label="Candidates"
-            icon={Users}
-            pathname={pathname}
-            prefixMatch="/dashboard/candidates"
-          />
+          {pipeline.map((item) => (
+            <NavLink key={item.href} {...item} pathname={pathname} />
+          ))}
         </NavSection>
         <NavSection title="System">
           {system.map((it) => (
@@ -125,11 +129,15 @@ export function Sidebar({ pathname }: { pathname: string }) {
       <div className="border-t border-white/10 p-4 space-y-3">
         <div className="flex items-center gap-3 rounded-input bg-black/20 px-3 py-2.5">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/20 text-xs font-bold text-white">
-            AR
+            {currentUser?.name?.slice(0, 2).toUpperCase() || "RW"}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-semibold text-white">A. Recruiter</div>
-            <div className="truncate text-xs text-white/50">HR Recruiter</div>
+            <div className="truncate text-sm font-semibold text-white">
+              {currentUser?.name || "RankWise Workspace"}
+            </div>
+            <div className="truncate text-xs text-white/50">
+              {currentUser?.email || "Connected recruitment workspace"}
+            </div>
           </div>
         </div>
         <button

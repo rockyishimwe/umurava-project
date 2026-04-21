@@ -1,6 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { getCandidates } from "@/lib/api";
-import { mockCandidates } from "@/lib/mockData";
 import type { Candidate } from "@/types";
 
 export interface CandidatesState {
@@ -10,7 +9,7 @@ export interface CandidatesState {
 }
 
 const initialState: CandidatesState = {
-  items: mockCandidates,
+  items: [],
   status: "idle",
 };
 
@@ -40,4 +39,3 @@ const candidatesSlice = createSlice({
 });
 
 export default candidatesSlice.reducer;
-
