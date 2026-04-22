@@ -14,10 +14,50 @@ import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { SkillTag } from "@/components/ui/SkillTag";
 import { useCandidates } from "@/hooks/useCandidates";
-import { getApiErrorMessage, getJob, uploadCandidatesFile } from "@/lib/api";
+import {
+  getApiErrorMessage,
+  getJob,
+  registerCandidates,
+  type RegisterCandidateInput,
+  uploadCandidatesFile,
+} from "@/lib/api";
 import { initials } from "@/lib/utils";
 
-type Tab = "pool" | "upload";
+type Tab = "pool" | "upload" | "manual";
+
+type ManualCandidateForm = {
+  applicant_name: string;
+  job_title: string;
+  skills: string;
+  education_certificates: string;
+  additional_info: string;
+  experience_in_years: string;
+};
+
+const initialManualForm: ManualCandidateForm = {
+  applicant_name: "",
+  job_title: "",
+  skills: "",
+  education_certificates: "",
+  additional_info: "",
+  experience_in_years: "",
+};
+
+function splitCommaList(value: string) {
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function inputClass(hasError?: boolean) {
+  return [
+    "mt-2 w-full rounded-input border bg-white px-3 text-sm outline-none transition-all focus:ring-2",
+    hasError
+      ? "border-danger focus:border-danger focus:ring-danger/20"
+      : "border-border focus:border-accent/40 focus:ring-accent/20",
+  ].join(" ");
+}
 
 export default function ScreeningIngestionPage() {
   const params = useParams<{ id: string }>();
@@ -28,7 +68,11 @@ export default function ScreeningIngestionPage() {
   const [q, setQ] = useState("");
   const [showRoleMatchesOnly, setShowRoleMatchesOnly] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [lastUploadSummary, setLastUploadSummary] = useState<{
+  const [submittingManual, setSubmittingManual] = useState(false);
+  const [manualForm, setManualForm] = useState<ManualCandidateForm>(initialManualForm);
+  const [manualErrors, setManualErrors] = useState<Partial<Record<keyof ManualCandidateForm, string>>>({});
+  const [lastIntakeSummary, setLastIntakeSummary] = useState<{
+    source: "upload" | "manual";
     createdCount: number;
     skippedCount: number;
   } | null>(null);
@@ -70,6 +114,26 @@ export default function ScreeningIngestionPage() {
     });
   }, [candidates, q, roleMatchedCandidates, showRoleMatchesOnly]);
 
+  async function refreshIngestionState(
+    source: "upload" | "manual",
+    response: {
+      createdCount: number;
+      skippedCount: number;
+    },
+  ) {
+    setLastIntakeSummary({
+      source,
+      createdCount: response.createdCount,
+      skippedCount: response.skippedCount,
+    });
+
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["candidates"] }),
+      queryClient.invalidateQueries({ queryKey: ["dashboardOverview"] }),
+      queryClient.invalidateQueries({ queryKey: ["job", jobId] }),
+    ]);
+  }
+
   async function handleChooseFile(file?: File | null) {
     if (!file) {
       return;
@@ -79,18 +143,13 @@ export default function ScreeningIngestionPage() {
 
     try {
       const response = await uploadCandidatesFile(file);
-      setLastUploadSummary({
-        createdCount: response.createdCount,
-        skippedCount: response.skippedCount,
-      });
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["candidates"] }),
-        queryClient.invalidateQueries({ queryKey: ["dashboardOverview"] }),
-        queryClient.invalidateQueries({ queryKey: ["job", jobId] }),
-      ]);
-      toast.success(
-        `${response.createdCount} candidate${response.createdCount === 1 ? "" : "s"} added successfully.`,
-      );
+      await refreshIngestionState("upload", response);
+      toast.success([
+        `${response.createdCount} candidate${response.createdCount === 1 ? "" : "s"} added.`,
+        response.skippedCount > 0
+          ? `${response.skippedCount} duplicate${response.skippedCount === 1 ? " was" : "s were"} skipped.`
+          : null,
+      ].filter(Boolean).join(" "));
       setTab("pool");
     } catch (uploadError) {
       toast.error(getApiErrorMessage(uploadError, "Unable to upload candidate file right now."));
@@ -99,6 +158,69 @@ export default function ScreeningIngestionPage() {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+    }
+  }
+
+  async function handleManualSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const jobTitle = (job?.title ?? manualForm.job_title).trim();
+    const experience = Number(manualForm.experience_in_years);
+    const nextErrors: Partial<Record<keyof ManualCandidateForm, string>> = {};
+
+    if (!manualForm.applicant_name.trim()) {
+      nextErrors.applicant_name = "Candidate name is required";
+    }
+
+    if (!jobTitle) {
+      nextErrors.job_title = "Role title is required";
+    }
+
+    if (!manualForm.experience_in_years.trim()) {
+      nextErrors.experience_in_years = "Experience is required";
+    } else if (!Number.isFinite(experience) || experience < 0) {
+      nextErrors.experience_in_years = "Experience must be a positive number";
+    }
+
+    setManualErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      toast.error("Please fix the highlighted intake fields.");
+      return;
+    }
+
+    const payload: RegisterCandidateInput[] = [
+      {
+        applicant_name: manualForm.applicant_name.trim(),
+        job_title: jobTitle,
+        skills: splitCommaList(manualForm.skills),
+        education_certificates: splitCommaList(manualForm.education_certificates),
+        additional_info: splitCommaList(manualForm.additional_info),
+        experience_in_years: experience,
+      },
+    ];
+
+    setSubmittingManual(true);
+
+    try {
+      const response = await registerCandidates(payload);
+      await refreshIngestionState("manual", response);
+      toast.success([
+        `${response.createdCount} candidate${response.createdCount === 1 ? "" : "s"} added.`,
+        response.skippedCount > 0
+          ? `${response.skippedCount} duplicate${response.skippedCount === 1 ? " was" : "s were"} skipped.`
+          : null,
+      ].filter(Boolean).join(" "));
+      setManualForm({
+        ...initialManualForm,
+        job_title: job?.title ?? manualForm.job_title,
+      });
+      setManualErrors({});
+      setTab("pool");
+    } catch (manualError) {
+      toast.error(getApiErrorMessage(manualError, "Unable to add this candidate right now."));
+    } finally {
+      setSubmittingManual(false);
     }
   }
 
@@ -158,9 +280,9 @@ export default function ScreeningIngestionPage() {
               <div className="rounded-card border border-border bg-bg p-4">
                 <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-text-muted">
                   <FileUp className="h-3.5 w-3.5" />
-                  Upload format
+                  Intake paths
                 </div>
-                <div className="mt-2 text-sm font-semibold text-text-primary">CSV or XLSX</div>
+                <div className="mt-2 text-sm font-semibold text-text-primary">CSV, XLSX, or manual form</div>
               </div>
             </CardBody>
           </Card>
@@ -187,6 +309,18 @@ export default function ScreeningIngestionPage() {
               type="button"
             >
               Upload File
+            </button>
+            <button
+              className={[
+                "rounded-badge border px-4 py-2 text-sm font-semibold",
+                tab === "manual"
+                  ? "border-accent bg-accent/10 text-accent"
+                  : "border-border bg-white text-text-muted",
+              ].join(" ")}
+              onClick={() => setTab("manual")}
+              type="button"
+            >
+              Add Manually
             </button>
           </div>
 
@@ -275,12 +409,12 @@ export default function ScreeningIngestionPage() {
                 <Card className="p-8 text-center">
                   <div className="text-sm font-semibold text-text-primary">No candidates match this view yet</div>
                   <div className="mt-1 text-sm text-text-muted">
-                    Try searching a broader term or upload a new spreadsheet for this role.
+                    Try searching a broader term, upload a spreadsheet, or add a candidate manually for this role.
                   </div>
                 </Card>
               ) : null}
             </>
-          ) : (
+          ) : tab === "upload" ? (
             <Card>
               <CardHeader
                 title="Upload Candidate Spreadsheet"
@@ -320,19 +454,190 @@ export default function ScreeningIngestionPage() {
                   <div className="rounded-card border border-border bg-bg p-4">
                     <div className="text-sm font-semibold text-text-primary">Best for right now</div>
                     <div className="mt-2 text-sm text-text-muted">
-                      Intake and profile review are now real. Candidate scoring and shortlist ranking still need a
-                      dedicated backend endpoint before we wire them in.
+                      This route is best when the recruiting team already has a prepared spreadsheet to import.
                     </div>
                   </div>
                   <div className="rounded-card border border-border bg-bg p-4">
-                    <div className="text-sm font-semibold text-text-primary">Recent upload</div>
+                    <div className="text-sm font-semibold text-text-primary">Recent intake</div>
                     <div className="mt-2 text-sm text-text-muted">
-                      {lastUploadSummary
-                        ? `${lastUploadSummary.createdCount} created, ${lastUploadSummary.skippedCount} skipped.`
-                        : "No upload has been completed in this session yet."}
+                      {lastIntakeSummary
+                        ? `${lastIntakeSummary.createdCount} created, ${lastIntakeSummary.skippedCount} skipped via ${lastIntakeSummary.source}.`
+                        : "No candidate intake has been completed in this session yet."}
                     </div>
                   </div>
                 </div>
+              </CardBody>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader
+                title="Add Candidate Manually"
+                subtitle="Use the backend applicant-registration route without preparing a spreadsheet first."
+              />
+              <CardBody>
+                <form className="space-y-6" onSubmit={handleManualSubmit}>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="text-sm font-semibold text-text-primary">Candidate Name</label>
+                      <input
+                        value={manualForm.applicant_name}
+                        onChange={(event) =>
+                          setManualForm((current) => ({
+                            ...current,
+                            applicant_name: event.target.value,
+                          }))
+                        }
+                        className={`${inputClass(Boolean(manualErrors.applicant_name))} h-10`}
+                        placeholder="Amina Uwase"
+                      />
+                      {manualErrors.applicant_name ? (
+                        <p className="mt-1.5 text-xs font-medium text-danger">{manualErrors.applicant_name}</p>
+                      ) : null}
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-semibold text-text-primary">Years of Experience</label>
+                      <input
+                        value={manualForm.experience_in_years}
+                        onChange={(event) =>
+                          setManualForm((current) => ({
+                            ...current,
+                            experience_in_years: event.target.value,
+                          }))
+                        }
+                        className={`${inputClass(Boolean(manualErrors.experience_in_years))} h-10`}
+                        inputMode="decimal"
+                        placeholder="5"
+                        type="number"
+                      />
+                      {manualErrors.experience_in_years ? (
+                        <p className="mt-1.5 text-xs font-medium text-danger">
+                          {manualErrors.experience_in_years}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  {job ? (
+                    <div className="rounded-card border border-border bg-bg p-4">
+                      <div className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">
+                        Role Title
+                      </div>
+                      <div className="mt-1 text-sm font-semibold text-text-primary">{job.title}</div>
+                      <div className="mt-2 text-sm text-text-muted">
+                        Manual intake on this screen is pinned to the current job so role matching stays reliable.
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="text-sm font-semibold text-text-primary">Role Title</label>
+                      <input
+                        value={manualForm.job_title}
+                        onChange={(event) =>
+                          setManualForm((current) => ({
+                            ...current,
+                            job_title: event.target.value,
+                          }))
+                        }
+                        className={`${inputClass(Boolean(manualErrors.job_title))} h-10`}
+                        placeholder="Senior Product Designer"
+                      />
+                      {manualErrors.job_title ? (
+                        <p className="mt-1.5 text-xs font-medium text-danger">{manualErrors.job_title}</p>
+                      ) : null}
+                    </div>
+                  )}
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="text-sm font-semibold text-text-primary">Skills</label>
+                      <textarea
+                        value={manualForm.skills}
+                        onChange={(event) =>
+                          setManualForm((current) => ({
+                            ...current,
+                            skills: event.target.value,
+                          }))
+                        }
+                        className={`${inputClass()} min-h-[110px] py-2`}
+                        placeholder="React, TypeScript, Figma, stakeholder communication"
+                      />
+                      <div className="mt-1 text-xs text-text-muted">
+                        Comma-separated skills are sent directly to the backend intake parser.
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-semibold text-text-primary">Education or Certifications</label>
+                      <textarea
+                        value={manualForm.education_certificates}
+                        onChange={(event) =>
+                          setManualForm((current) => ({
+                            ...current,
+                            education_certificates: event.target.value,
+                          }))
+                        }
+                        className={`${inputClass()} min-h-[110px] py-2`}
+                        placeholder="BSc Computer Science, AWS Certified Developer"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-semibold text-text-primary">Additional Info</label>
+                    <textarea
+                      value={manualForm.additional_info}
+                      onChange={(event) =>
+                        setManualForm((current) => ({
+                          ...current,
+                          additional_info: event.target.value,
+                        }))
+                      }
+                      className={`${inputClass()} min-h-[110px] py-2`}
+                      placeholder="amina@example.com, linkedin.com/in/aminauwase, strong portfolio feedback"
+                    />
+                    <div className="mt-1 text-xs text-text-muted">
+                      Add email, LinkedIn, or recruiter notes as a comma-separated list.
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="rounded-card border border-border bg-bg p-4">
+                      <div className="text-sm font-semibold text-text-primary">Best for right now</div>
+                      <div className="mt-2 text-sm text-text-muted">
+                        This path is ideal when a recruiter wants to add one candidate quickly without leaving the
+                        role workflow.
+                      </div>
+                    </div>
+                    <div className="rounded-card border border-border bg-bg p-4">
+                      <div className="text-sm font-semibold text-text-primary">Recent intake</div>
+                      <div className="mt-2 text-sm text-text-muted">
+                        {lastIntakeSummary
+                          ? `${lastIntakeSummary.createdCount} created, ${lastIntakeSummary.skippedCount} skipped via ${lastIntakeSummary.source}.`
+                          : "No candidate intake has been completed in this session yet."}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setManualForm({
+                          ...initialManualForm,
+                          job_title: job?.title ?? "",
+                        });
+                        setManualErrors({});
+                      }}
+                      type="button"
+                    >
+                      Clear Form
+                    </Button>
+                    <Button disabled={submittingManual} type="submit">
+                      {submittingManual ? "Adding Candidate..." : "Add Candidate"}
+                    </Button>
+                  </div>
+                </form>
               </CardBody>
             </Card>
           )}
@@ -361,10 +666,10 @@ export default function ScreeningIngestionPage() {
                 Use the exact job title from the brief so candidates can be grouped correctly.
               </div>
               <div className="rounded-card border border-border bg-bg p-4">
-                Keep spreadsheet skill columns concise; long freeform notes work better in additional info.
+                Keep skill lists concise; longer recruiter notes work better in additional info.
               </div>
               <div className="rounded-card border border-border bg-bg p-4">
-                Re-uploading the same candidate for the same role will be skipped automatically.
+                Re-intaking the same candidate for the same role will be skipped automatically.
               </div>
             </CardBody>
           </Card>

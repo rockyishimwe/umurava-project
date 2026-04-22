@@ -76,6 +76,15 @@ export type CompleteJobPayload = {
   };
 };
 
+export type RegisterCandidateInput = {
+  applicant_name: string;
+  job_title: string;
+  skills: string[] | string;
+  education_certificates: string[] | string;
+  additional_info?: string[] | string;
+  experience_in_years: number;
+};
+
 type LoginResponse = {
   success: string;
   user?: AuthUser;
@@ -114,6 +123,48 @@ type RegisterCandidatesResponse = {
   skippedCount: number;
   applicants: Candidate[];
 };
+
+function normalizeCandidateList(value: string[] | string | undefined) {
+  if (!value) {
+    return [];
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => item.trim()).filter(Boolean);
+  }
+
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function buildMockCandidate(input: RegisterCandidateInput, index: number): Candidate {
+  const createdAtISO = new Date().toISOString();
+  const additionalInfo = normalizeCandidateList(input.additional_info);
+  const email = additionalInfo.find((item) => /\S+@\S+\.\S+/.test(item));
+  const linkedIn = additionalInfo.find((item) => item.toLowerCase().includes("linkedin"));
+
+  return {
+    id: `mock-candidate-${Date.now()}-${index}`,
+    name: input.applicant_name,
+    currentTitle: input.job_title,
+    location: "Location not provided",
+    yearsExperience: input.experience_in_years,
+    email,
+    linkedIn,
+    shortlisted: false,
+    appliedJobTitle: input.job_title,
+    createdAtISO,
+    updatedAtISO: createdAtISO,
+    skills: {
+      technical: normalizeCandidateList(input.skills),
+      soft: additionalInfo.filter((item) => item !== email && item !== linkedIn),
+    },
+    education: normalizeCandidateList(input.education_certificates),
+    workHistory: [],
+  };
+}
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -339,6 +390,28 @@ export async function uploadCandidatesFile(file: File): Promise<RegisterCandidat
   const response = await api.post<RegisterCandidatesResponse>("/register-candidates", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return response.data;
+}
+
+export async function registerCandidates(
+  applicants: RegisterCandidateInput[],
+): Promise<RegisterCandidatesResponse> {
+  if (isMockMode()) {
+    await sleep(450);
+    return {
+      success: "Applicants processed successfully",
+      createdCount: applicants.length,
+      skippedCount: 0,
+      applicants: applicants.map(buildMockCandidate),
+    };
+  }
+
+  const response = await api.post<RegisterCandidatesResponse>("/register-candidates", applicants, {
+    headers: {
+      "Content-Type": "application/json",
     },
   });
 
