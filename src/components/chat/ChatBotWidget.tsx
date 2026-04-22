@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { MessageSquare, Send, X, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
+import { BrandMark } from "@/components/brand/BrandLogo";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 
@@ -46,7 +47,7 @@ export function ChatBotWidget() {
     {
       id: uid(),
       role: "assistant",
-      text: "Hi! I'm RankWise Copilot. I can help you create jobs, tune AI criteria, and interpret shortlist results.",
+      text: "Hi! I'm WiseRank Assistant. I can help you create jobs, tune AI criteria, and interpret shortlist results.",
       ts: Date.now(),
     },
   ]);
@@ -115,11 +116,9 @@ export function ChatBotWidget() {
             >
               <div className="flex items-center justify-between gap-3 border-b border-border p-4">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-input bg-accent/10 text-accent">
-                    <Sparkles className="h-5 w-5" />
-                  </div>
+                  <BrandMark className="h-9 w-9" />
                   <div>
-                    <div className="text-sm font-semibold">RankWise Copilot</div>
+                    <div className="text-sm font-semibold">WiseRank Assistant</div>
                     <div className="text-xs text-text-muted">Assistant for recruiter workflows</div>
                   </div>
                 </div>

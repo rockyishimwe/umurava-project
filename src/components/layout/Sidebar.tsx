@@ -6,10 +6,10 @@ import {
   Briefcase,
   Settings,
   LogOut,
-  Zap,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { logoutUser } from "@/lib/api";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/lib/constants";
@@ -100,12 +100,7 @@ export function Sidebar({ pathname }: { pathname: string }) {
   return (
     <aside className="hidden h-screen w-[260px] shrink-0 flex-col overflow-hidden border-r border-white/10 bg-primary md:flex">
       <div className="flex h-16 items-center gap-3 border-b border-white/10 px-5 py-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-input bg-accent text-white shadow-sm shadow-accent/30">
-          <Zap className="h-5 w-5" />
-        </div>
-        <div>
-          <div className="text-sm font-bold tracking-tight text-white">RankWise</div>
-        </div>
+        <BrandLogo size="sm" tone="dark" subtitle="Recruiter workspace" />
       </div>
 
       <nav className="flex-1 overflow-y-auto pb-0">
@@ -133,7 +128,7 @@ export function Sidebar({ pathname }: { pathname: string }) {
           </div>
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-semibold text-white">
-              {currentUser?.name || "RankWise Workspace"}
+              {currentUser?.name || "WiseRank Workspace"}
             </div>
             <div className="truncate text-xs text-white/50">
               {currentUser?.email || "Connected recruitment workspace"}

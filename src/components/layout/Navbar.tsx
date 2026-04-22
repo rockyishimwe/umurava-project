@@ -6,6 +6,7 @@ import { LogOut, ShieldCheck } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/Badge";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { logoutUser } from "@/lib/api";
 import { ROUTES } from "@/lib/constants";
@@ -54,13 +55,7 @@ export function Navbar() {
   return (
     <div className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/90 px-6 backdrop-blur">
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-input bg-primary font-bold text-white">
-          WR
-        </div>
-        <div>
-          <div className="font-semibold text-text-primary">WiseRank</div>
-          <div className="text-xs text-text-muted">Recruiter workspace</div>
-        </div>
+        <BrandLogo size="sm" subtitle="Recruiter workspace" />
       </div>
 
       <div className="flex items-center gap-3">

@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   BarChart3,
@@ -11,27 +9,23 @@ import {
   Shield,
   Sparkles,
   Users,
-  Zap,
   Moon,
   Sun,
 } from "lucide-react";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Button } from "@/components/ui/Button";
 import { ROUTES } from "@/lib/constants";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
 export default function LandingPage() {
   const { theme, toggleTheme } = useTheme();
-  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-bg">
       <header className="sticky top-0 z-40 border-b border-border bg-card">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href={ROUTES.home} className="flex items-center gap-2 font-bold text-text-primary">
-            <span className="flex h-9 w-9 items-center justify-center rounded-input bg-accent text-white shadow-sm">
-              <Zap className="h-5 w-5" />
-            </span>
-            RankWise
+          <Link href={ROUTES.home} className="transition-transform hover:scale-[1.01]">
+            <BrandLogo size="sm" />
           </Link>
           <nav className="flex items-center gap-2 sm:gap-3">
             <button
@@ -104,7 +98,7 @@ export default function LandingPage() {
                 Screen candidates with clarity, speed, and explainable AI
               </h1>
               <p className="mt-5 text-lg text-text-muted sm:text-xl">
-                RankWise helps HR teams ingest applicants, run consistent scoring against your
+                WiseRank helps HR teams ingest applicants, run consistent scoring against your
                 criteria, and shortlist with reasoning your hiring managers can trust.
               </p>
               <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
@@ -258,7 +252,7 @@ export default function LandingPage() {
 
       <footer className="border-t border-border py-10">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 text-sm text-text-muted sm:flex-row sm:px-6">
-          <p>© {new Date().getFullYear()} RankWise · Demo frontend</p>
+          <p>© {new Date().getFullYear()} WiseRank · Demo frontend</p>
           <div className="flex gap-6">
             <Link href="/about" className="hover:text-text-primary transition-colors">
               About

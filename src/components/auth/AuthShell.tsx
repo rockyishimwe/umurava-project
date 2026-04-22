@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, ShieldCheck, Sparkles, Zap } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { ROUTES } from "@/lib/constants";
 
 export function AuthShell({
@@ -29,11 +30,8 @@ export function AuthShell({
             <span className="text-sm font-medium">Back to home</span>
           </Link>
 
-          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card/80 px-4 py-2 text-sm font-semibold text-text-primary shadow-card">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-white shadow-sm">
-              <Zap className="h-4 w-4" />
-            </span>
-            RankWise Recruiter Workspace
+          <div className="inline-flex w-fit rounded-full border border-border bg-card/80 px-4 py-2 shadow-card">
+            <BrandLogo size="sm" subtitle="Recruiter Workspace" />
           </div>
 
           <h1 className="mt-8 max-w-xl text-5xl font-extrabold tracking-tight text-text-primary">
@@ -71,10 +69,7 @@ export function AuthShell({
               href={ROUTES.home}
               className="inline-flex items-center justify-center gap-2 rounded-input border border-border bg-card px-3 py-2 text-sm font-semibold text-text-primary shadow-card transition-colors hover:border-accent/30 hover:bg-bg"
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-input bg-accent text-white shadow-sm">
-                <Zap className="h-4 w-4" />
-              </span>
-              RankWise
+              <BrandLogo size="sm" />
             </Link>
             <h1 className="mt-6 text-3xl font-bold tracking-tight text-text-primary">{title}</h1>
             <p className="mt-2 text-sm text-text-muted">{subtitle}</p>
